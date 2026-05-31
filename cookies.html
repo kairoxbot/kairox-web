@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Cookies — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#020817;--accent:#0ea5e9;--accent2:#00d4ff;--glow:rgba(0,212,255,.15);--text1:#f0f9ff;--text2:#94a3b8;--border:rgba(14,165,233,.2); }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text1);font-family:'Exo 2',sans-serif;min-height:100vh;}
+    #bg{position:fixed;inset:0;z-index:0;opacity:0.4;}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 60px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,8,23,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+    .nav-logo{display:flex;align-items:center;gap:10px;font-family:'Orbitron',monospace;font-size:17px;font-weight:900;letter-spacing:3px;color:var(--text1);text-decoration:none;}
+    .nav-logo .icon{filter:drop-shadow(0 0 8px var(--accent2));}
+    .nav-logo span{color:var(--accent2);}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 18px;transition:all .2s;}
+    .back-btn:hover{color:var(--accent2);border-color:var(--accent2);background:var(--glow);}
+    .page{position:relative;z-index:10;max-width:860px;margin:0 auto;padding:120px 40px 80px;}
+    .doc-header{text-align:center;margin-bottom:60px;}
+    .doc-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent2);background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);border-radius:100px;padding:6px 18px;margin-bottom:20px;}
+    .doc-title{font-family:'Orbitron',monospace;font-size:clamp(26px,5vw,44px);font-weight:900;color:var(--text1);margin-bottom:16px;}
+    .doc-title span{color:var(--accent2);}
+    .doc-meta{color:var(--text2);font-size:14px;}
+    .doc-meta strong{color:var(--accent);}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:40px 0;}
+    .doc-section{margin-bottom:48px;}
+    .section-num{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;}
+    h2{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--text1);margin-bottom:16px;letter-spacing:1px;}
+    p{color:var(--text2);font-size:15px;line-height:1.8;margin-bottom:14px;}
+    ul{color:var(--text2);font-size:15px;line-height:1.8;list-style:none;margin-bottom:14px;}
+    ul li{padding:6px 0 6px 24px;position:relative;}
+    ul li::before{content:'▸';position:absolute;left:0;color:var(--accent2);font-size:12px;top:8px;}
+    a{color:var(--accent2);text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    strong{color:var(--text1);}
+    .info-box{background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.2);border-radius:10px;padding:20px 24px;margin:20px 0;display:flex;gap:14px;align-items:flex-start;}
+    .info-box .icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+    .info-box p{margin:0;font-size:14px;}
+    .cookie-card{background:rgba(8,22,45,0.7);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:16px;}
+    .cookie-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+    .cookie-name{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--text1);}
+    .cookie-badge{font-size:10px;font-weight:700;letter-spacing:1.5px;padding:4px 12px;border-radius:100px;}
+    .badge-necessary{background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.3);}
+    .badge-functional{background:rgba(14,165,233,0.12);color:var(--accent2);border:1px solid rgba(14,165,233,0.3);}
+    .cookie-desc{color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:8px;}
+    .cookie-meta{display:flex;gap:24px;flex-wrap:wrap;}
+    .cookie-meta-item{font-size:12px;color:var(--text2);}
+    .cookie-meta-item strong{color:var(--accent);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+    footer{position:relative;z-index:10;border-top:1px solid var(--border);padding:28px 60px;display:flex;justify-content:space-between;align-items:center;background:rgba(2,8,23,0.6);flex-wrap:wrap;gap:12px;}
+    footer p{color:var(--text2);font-size:13px;}
+    .footer-links{display:flex;gap:20px;}
+    .footer-links a{color:var(--text2);font-size:13px;text-decoration:none;transition:color .2s;}
+    .footer-links a:hover{color:var(--accent2);}
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo"><span class="icon">🛡️</span>KAIROX<span>BOT</span></a>
+  <a href="/" class="back-btn">← Volver al inicio</a>
+</nav>
+
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-tag">Legal</div>
+    <h1 class="doc-title">Política de <span>Cookies</span></h1>
+    <p class="doc-meta">Última actualización: <strong>Junio 2025</strong> · Operador: <strong>exagonal · Chile</strong></p>
+  </div>
+
+  <div class="info-box">
+    <span class="icon">🍪</span>
+    <p>KairoxBot usa cookies exclusivamente para mantener tu sesión activa en el dashboard. No utilizamos cookies de seguimiento, publicidad ni analítica de terceros.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="doc-section">
+    <div class="section-num">01 — ¿Qué son las cookies?</div>
+    <h2>Definición</h2>
+    <p>Las cookies son pequeños archivos de texto que un sitio web almacena en tu navegador cuando lo visitas. Permiten que el sitio recuerde información entre visitas, como si estás autenticado.</p>
+    <p>KairoxBot <strong>no usa</strong> cookies de rastreo, publicidad ni analítica de ningún tipo. Solo usamos las cookies estrictamente necesarias para que el servicio funcione.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">02 — Cookies que usamos</div>
+    <h2>Listado completo</h2>
+
+    <div class="cookie-card">
+      <div class="cookie-card-header">
+        <span class="cookie-name">token</span>
+        <span class="cookie-badge badge-necessary">Estrictamente necesaria</span>
+      </div>
+      <p class="cookie-desc">Cookie de sesión JWT que mantiene tu login activo en el dashboard. Sin esta cookie tendrías que iniciar sesión en cada visita. Contiene un token cifrado que identifica tu sesión de forma segura.</p>
+      <div class="cookie-meta">
+        <div class="cookie-meta-item"><strong>Duración</strong> 7 días</div>
+        <div class="cookie-meta-item"><strong>Tipo</strong> HttpOnly, Secure</div>
+        <div class="cookie-meta-item"><strong>Origen</strong> KairoxBot (primera parte)</div>
+      </div>
+    </div>
+
+    <p>Eso es todo. No hay más cookies. No hay píxeles de seguimiento, scripts de Google Analytics, Facebook Pixel ni nada similar.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">03 — Cookies de terceros</div>
+    <h2>¿Usamos cookies externas?</h2>
+    <p><strong>No.</strong> KairoxBot no integra servicios de terceros que establezcan cookies en tu navegador. Las fuentes de Google Fonts se cargan con peticiones CSS externas pero <strong>no establecen cookies</strong> en tu dispositivo.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">04 — Cómo gestionar las cookies</div>
+    <h2>Control desde tu navegador</h2>
+    <p>Puedes eliminar o bloquear las cookies del dashboard desde la configuración de tu navegador. Ten en cuenta que si eliminas la cookie <code style="color:var(--accent2);background:rgba(14,165,233,0.1);padding:2px 8px;border-radius:4px;font-size:13px;">token</code>, se cerrará tu sesión y tendrás que volver a iniciar sesión.</p>
+    <ul>
+      <li><strong>Chrome:</strong> Configuración → Privacidad → Cookies y otros datos de sitios</li>
+      <li><strong>Firefox:</strong> Preferencias → Privacidad → Cookies y datos del sitio</li>
+      <li><strong>Safari:</strong> Preferencias → Privacidad → Gestionar datos de sitios web</li>
+      <li><strong>Edge:</strong> Configuración → Privacidad → Cookies y permisos del sitio</li>
+    </ul>
+    <div class="info-box">
+      <span class="icon">ℹ️</span>
+      <p>Bloquear la cookie <strong>token</strong> impedirá que puedas mantener la sesión iniciada en el dashboard, pero no afectará al funcionamiento del bot en tu servidor Discord.</p>
+    </div>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">05 — Consentimiento</div>
+    <h2>Base legal</h2>
+    <p>La cookie <strong>token</strong> es técnicamente necesaria para proveer el servicio solicitado (mantener la sesión). Según la legislación chilena aplicable y los estándares internacionales de privacidad, las cookies estrictamente necesarias no requieren consentimiento previo, ya que son esenciales para el funcionamiento del servicio.</p>
+    <p>Al iniciar sesión en el dashboard aceptas el uso de esta cookie.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">06 — Contacto</div>
+    <h2>¿Dudas?</h2>
+    <p>Si tienes preguntas sobre el uso de cookies, contáctanos:</p>
+    <ul>
+      <li>Email: <a href="mailto:frtjjj7@gmail.com">frtjjj7@gmail.com</a></li>
+      <li>Discord: <a href="https://discord.gg/EykUGGhf" target="_blank">discord.gg/EykUGGhf</a></li>
+    </ul>
+  </div>
+
+  <div class="divider"></div>
+  <p style="text-align:center;color:var(--text2);font-size:13px;">
+    Ver también: <a href="/terms">Términos de Servicio</a> · <a href="/privacy">Política de Privacidad</a>
+  </p>
+</div>
+
+<footer>
+  <p>© KairoxBot Security · <a href="mailto:frtjjj7@gmail.com" style="color:var(--accent)">frtjjj7@gmail.com</a></p>
+  <div class="footer-links">
+    <a href="/terms">Términos</a>
+    <a href="/privacy">Privacidad</a>
+    <a href="/cookies">Cookies</a>
+    <a href="https://discord.gg/EykUGGhf" target="_blank">Discord</a>
+  </div>
+</footer>
+
+<script>
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');let W,H,hexes=[];const S=40;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;hexes=[];const w=S*2,h=Math.sqrt(3)*S,cols=Math.ceil(W/(w*.75))+4,rows=Math.ceil(H/h)+3;for(let r=-1;r<rows;r++)for(let c=-2;c<cols;c++)hexes.push({x:c*w*.75,y:r*h+(c%2===0?0:h/2),phase:Math.random()*Math.PI*2,speed:.3+Math.random()*.4});}
+function drawHex(x,y,s,a){ctx.beginPath();for(let i=0;i<6;i++){const ang=Math.PI/180*(60*i-30);ctx.lineTo(x+s*Math.cos(ang),y+s*Math.sin(ang));}ctx.closePath();ctx.strokeStyle=`rgba(14,165,233,${a})`;ctx.lineWidth=.7;ctx.stroke();}
+let t=0;function loop(){requestAnimationFrame(loop);t+=.01;ctx.fillStyle='#020817';ctx.fillRect(0,0,W,H);hexes.forEach(h=>{const p=.02+Math.abs(Math.sin(t*h.speed+h.phase))*.1;drawHex(h.x,h.y,S-1,p);if(Math.sin(t*h.speed*2+h.phase)>.97)drawHex(h.x,h.y,S-1,.4);});}
+resize();loop();window.addEventListener('resize',resize);
+</script>
+</body>
+</html>

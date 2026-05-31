@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Términos de Servicio — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020817; --surface: #040f1e; --card: rgba(8,22,45,0.85);
+      --accent: #0ea5e9; --accent2: #00d4ff; --glow: rgba(0,212,255,.15);
+      --text1: #f0f9ff; --text2: #94a3b8; --border: rgba(14,165,233,.2);
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text1); font-family:'Exo 2',sans-serif; min-height:100vh; }
+
+    /* Hex background */
+    #bg { position:fixed; inset:0; z-index:0; opacity:0.4; }
+
+    /* Nav */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      padding:18px 60px; display:flex; align-items:center; justify-content:space-between;
+      background:rgba(2,8,23,0.8); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-logo {
+      display:flex; align-items:center; gap:10px;
+      font-family:'Orbitron',monospace; font-size:17px; font-weight:900;
+      letter-spacing:3px; color:var(--text1); text-decoration:none;
+    }
+    .nav-logo .icon { filter:drop-shadow(0 0 8px var(--accent2)); }
+    .nav-logo span { color:var(--accent2); }
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      color:var(--text2); font-size:13px; text-decoration:none;
+      border:1px solid var(--border); border-radius:6px; padding:8px 18px;
+      transition:all .2s; letter-spacing:.5px;
+    }
+    .back-btn:hover { color:var(--accent2); border-color:var(--accent2); background:var(--glow); }
+
+    /* Page */
+    .page { position:relative; z-index:10; max-width:860px; margin:0 auto; padding:120px 40px 80px; }
+
+    /* Header */
+    .doc-header { text-align:center; margin-bottom:60px; }
+    .doc-tag {
+      display:inline-block; font-size:11px; font-weight:600; letter-spacing:3px;
+      text-transform:uppercase; color:var(--accent2);
+      background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.25);
+      border-radius:100px; padding:6px 18px; margin-bottom:20px;
+    }
+    .doc-title {
+      font-family:'Orbitron',monospace; font-size:clamp(26px,5vw,44px);
+      font-weight:900; color:var(--text1); line-height:1.15; margin-bottom:16px;
+    }
+    .doc-title span { color:var(--accent2); }
+    .doc-meta { color:var(--text2); font-size:14px; }
+    .doc-meta strong { color:var(--accent); }
+
+    /* Divider */
+    .divider { height:1px; background:linear-gradient(90deg,transparent,var(--accent),transparent); margin:40px 0; }
+
+    /* Content */
+    .doc-section { margin-bottom:48px; }
+    .section-num {
+      font-family:'Orbitron',monospace; font-size:11px; font-weight:700;
+      letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:8px;
+    }
+    h2 {
+      font-family:'Orbitron',monospace; font-size:18px; font-weight:700;
+      color:var(--text1); margin-bottom:16px; letter-spacing:1px;
+    }
+    p { color:var(--text2); font-size:15px; line-height:1.8; margin-bottom:14px; }
+    ul { color:var(--text2); font-size:15px; line-height:1.8; padding-left:0; list-style:none; margin-bottom:14px; }
+    ul li { padding:6px 0 6px 24px; position:relative; }
+    ul li::before { content:'▸'; position:absolute; left:0; color:var(--accent2); font-size:12px; top:8px; }
+    a { color:var(--accent2); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    strong { color:var(--text1); }
+
+    /* Alert box */
+    .info-box {
+      background:rgba(14,165,233,0.06); border:1px solid rgba(14,165,233,0.2);
+      border-radius:10px; padding:20px 24px; margin:20px 0;
+      display:flex; gap:14px; align-items:flex-start;
+    }
+    .info-box .icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+    .info-box p { margin:0; font-size:14px; }
+
+    /* Footer */
+    footer {
+      position:relative; z-index:10;
+      border-top:1px solid var(--border); padding:28px 60px;
+      display:flex; justify-content:space-between; align-items:center;
+      background:rgba(2,8,23,0.6); flex-wrap:wrap; gap:12px;
+    }
+    footer p { color:var(--text2); font-size:13px; }
+    .footer-links { display:flex; gap:20px; }
+    .footer-links a { color:var(--text2); font-size:13px; text-decoration:none; transition:color .2s; }
+    .footer-links a:hover { color:var(--accent2); }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo"><span class="icon">🛡️</span>KAIROX<span>BOT</span></a>
+  <a href="/" class="back-btn">← Volver al inicio</a>
+</nav>
+
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-tag">Legal</div>
+    <h1 class="doc-title">Términos de <span>Servicio</span></h1>
+    <p class="doc-meta">Última actualización: <strong>Junio 2025</strong> · Aplicable en: <strong>Chile y jurisdicciones aplicables</strong></p>
+  </div>
+
+  <div class="info-box">
+    <span class="icon">ℹ️</span>
+    <p>Al usar KairoxBot o registrarte en nuestra plataforma, aceptas estos términos en su totalidad. Si no estás de acuerdo, por favor no utilices el servicio.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="doc-section">
+    <div class="section-num">01 — Definiciones</div>
+    <h2>¿Qué es KairoxBot?</h2>
+    <p><strong>KairoxBot</strong> es un bot de seguridad para Discord desarrollado y operado por <strong>exagonal</strong>, con base en Chile. El servicio incluye el bot de Discord, el dashboard web y todos los sistemas asociados.</p>
+    <ul>
+      <li><strong>"Servicio"</strong> se refiere al bot KairoxBot, el dashboard y todas las herramientas asociadas.</li>
+      <li><strong>"Usuario"</strong> es cualquier persona que accede o utiliza el Servicio.</li>
+      <li><strong>"Servidor"</strong> es cualquier servidor de Discord donde se ha añadido KairoxBot.</li>
+      <li><strong>"Propietario"</strong> se refiere a exagonal, operador del Servicio.</li>
+    </ul>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">02 — Aceptación del servicio</div>
+    <h2>Condiciones de uso</h2>
+    <p>Para usar KairoxBot debes:</p>
+    <ul>
+      <li>Tener al menos 13 años de edad (conforme a los Términos de Servicio de Discord).</li>
+      <li>Tener una cuenta activa y válida en Discord.</li>
+      <li>Ser el propietario o administrador autorizado del servidor donde instales el bot.</li>
+      <li>No usar el Servicio para fines ilegales o en violación de los Términos de Discord.</li>
+    </ul>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">03 — Uso permitido</div>
+    <h2>Lo que puedes hacer</h2>
+    <ul>
+      <li>Añadir KairoxBot a servidores de Discord que administres.</li>
+      <li>Configurar las opciones de protección disponibles en el dashboard.</li>
+      <li>Consultar los logs y estadísticas de tu servidor.</li>
+      <li>Gestionar la whitelist de usuarios de confianza.</li>
+    </ul>
+    <h2 style="margin-top:24px">Lo que NO puedes hacer</h2>
+    <ul>
+      <li>Intentar hackear, reverse-engineer o explotar vulnerabilidades del Servicio.</li>
+      <li>Usar el Servicio para acosar, dañar o discriminar a personas.</li>
+      <li>Revender, redistribuir o sublicenciar el acceso al Servicio.</li>
+      <li>Automatizar acciones que sobrecargen o dañen la infraestructura del Servicio.</li>
+      <li>Usar el bot para violar los Términos de Servicio de Discord.</li>
+    </ul>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">04 — Disponibilidad</div>
+    <h2>Uptime y mantenimiento</h2>
+    <p>KairoxBot se ofrece <strong>"tal como está"</strong>. Hacemos nuestro mejor esfuerzo para mantener el servicio activo 24/7, pero no garantizamos disponibilidad continua. Pueden ocurrir interrupciones por mantenimiento, actualizaciones o causas fuera de nuestro control.</p>
+    <p>Nos reservamos el derecho de modificar, suspender o discontinuar el Servicio en cualquier momento, con o sin previo aviso.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">05 — Limitación de responsabilidad</div>
+    <h2>Alcance de nuestra responsabilidad</h2>
+    <p>KairoxBot es una herramienta de <strong>asistencia en seguridad</strong>. No somos responsables de:</p>
+    <ul>
+      <li>Daños producidos a servidores de Discord por ataques que el bot no haya podido detectar o prevenir.</li>
+      <li>Pérdida de datos, miembros, canales o roles en tu servidor.</li>
+      <li>Acciones automáticas del bot que resulten en sanciones no deseadas a usuarios.</li>
+      <li>Interrupciones del Servicio por causas externas (Discord, proveedores de hosting, etc.).</li>
+    </ul>
+    <div class="info-box">
+      <span class="icon">⚠️</span>
+      <p>Siempre configura correctamente la whitelist de administradores de confianza para evitar falsos positivos.</p>
+    </div>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">06 — Terminación</div>
+    <h2>Suspensión de acceso</h2>
+    <p>Nos reservamos el derecho de suspender o eliminar tu cuenta y acceso al Servicio si:</p>
+    <ul>
+      <li>Violas estos Términos de Servicio.</li>
+      <li>Usas el Servicio para actividades ilegales o dañinas.</li>
+      <li>Tu conducta pone en riesgo la seguridad o estabilidad del Servicio.</li>
+    </ul>
+    <p>Tú también puedes dejar de usar el Servicio en cualquier momento eliminando el bot de tu servidor y tu cuenta del dashboard.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">07 — Cambios a los términos</div>
+    <h2>Actualizaciones</h2>
+    <p>Podemos actualizar estos Términos en cualquier momento. Los cambios significativos serán notificados a través del servidor de soporte de Discord o por correo electrónico registrado. El uso continuado del Servicio tras las modificaciones implica aceptación de los nuevos términos.</p>
+  </div>
+
+  <div class="doc-section">
+    <div class="section-num">08 — Contacto</div>
+    <h2>¿Preguntas?</h2>
+    <p>Si tienes dudas sobre estos Términos, contáctanos:</p>
+    <ul>
+      <li>Email: <a href="mailto:frtjjj7@gmail.com">frtjjj7@gmail.com</a></li>
+      <li>Discord: <a href="https://discord.gg/EykUGGhf" target="_blank">discord.gg/EykUGGhf</a></li>
+    </ul>
+  </div>
+
+  <div class="divider"></div>
+  <p style="text-align:center; color:var(--text2); font-size:13px;">
+    También puedes revisar nuestra <a href="/privacy">Política de Privacidad</a> y <a href="/cookies">Política de Cookies</a>.
+  </p>
+</div>
+
+<footer>
+  <p>© KairoxBot Security · <a href="mailto:frtjjj7@gmail.com" style="color:var(--accent)">frtjjj7@gmail.com</a></p>
+  <div class="footer-links">
+    <a href="/terms">Términos</a>
+    <a href="/privacy">Privacidad</a>
+    <a href="/cookies">Cookies</a>
+    <a href="https://discord.gg/EykUGGhf" target="_blank">Discord</a>
+  </div>
+</footer>
+
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H, hexes = [];
+const S = 40;
+function resize() {
+  W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight;
+  hexes = [];
+  const w = S*2, h = Math.sqrt(3)*S;
+  const cols = Math.ceil(W/(w*.75))+4, rows = Math.ceil(H/h)+3;
+  for(let r=-1;r<rows;r++) for(let c=-2;c<cols;c++) {
+    hexes.push({x:c*w*.75, y:r*h+(c%2===0?0:h/2), phase:Math.random()*Math.PI*2, speed:.3+Math.random()*.4});
+  }
+}
+function drawHex(x,y,size,alpha) {
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);ctx.lineTo(x+size*Math.cos(a),y+size*Math.sin(a));}
+  ctx.closePath(); ctx.strokeStyle=`rgba(14,165,233,${alpha})`; ctx.lineWidth=.7; ctx.stroke();
+}
+let t=0;
+function loop() {
+  requestAnimationFrame(loop); t+=.01;
+  ctx.fillStyle='#020817'; ctx.fillRect(0,0,W,H);
+  hexes.forEach(h=>{
+    const p=.02+Math.abs(Math.sin(t*h.speed+h.phase))*.1;
+    drawHex(h.x,h.y,S-1,p);
+    if(Math.sin(t*h.speed*2+h.phase)>.97) drawHex(h.x,h.y,S-1,.4);
+  });
+}
+resize(); loop();
+window.addEventListener('resize',resize);
+</script>
+</body>
+</html>

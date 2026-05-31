@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KairoxBot — Protección Anti-Nuke para Discord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #020817;
+      --bg-deep: #040f1e;
+      --bg-surface: #071526;
+      --bg-card: rgba(8, 22, 45, 0.7);
+      --accent-1: #0ea5e9;
+      --accent-2: #00d4ff;
+      --accent-3: #38bdf8;
+      --accent-glow: rgba(0, 212, 255, 0.15);
+      --accent-glow-strong: rgba(0, 212, 255, 0.35);
+      --text-1: #f0f9ff;
+      --text-2: #bae6fd;
+      --text-3: #64748b;
+      --border: rgba(14, 165, 233, 0.18);
+      --border-bright: rgba(0, 212, 255, 0.4);
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-void);
+      color: var(--text-1);
+      font-family: 'Exo 2', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom Cursor ── */
+    .cursor { position:fixed; width:12px; height:12px; background:var(--accent-2); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:transform .1s, opacity .2s; mix-blend-mode:difference; }
+    .cursor-ring { position:fixed; width:36px; height:36px; border:1.5px solid var(--accent-1); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:all .18s ease; }
+    body:has(a:hover) .cursor-ring, body:has(button:hover) .cursor-ring { transform:translate(-50%,-50%) scale(1.6); border-color:var(--accent-2); }
+
+    /* ── Canvas ── */
+    #bg-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+    /* ── Noise overlay ── */
+    body::after {
+      content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:0.022; pointer-events:none; z-index:1;
+    }
+
+    /* ── Navigation ── */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      padding:20px 60px;
+      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(2,8,23,0.5);
+      backdrop-filter:blur(20px) saturate(180%);
+      border-bottom:1px solid var(--border);
+      transition:all .3s;
+    }
+    nav.scrolled { padding:14px 60px; background:rgba(2,8,23,0.85); }
+    .nav-logo {
+      display:flex; align-items:center; gap:12px;
+      font-family:'Orbitron',monospace; font-size:18px; font-weight:900;
+      letter-spacing:3px; color:var(--text-1); text-decoration:none;
+    }
+    .nav-logo .shield-icon { font-size:26px; filter:drop-shadow(0 0 10px var(--accent-2)); animation:pulseShield 3s ease-in-out infinite; }
+    @keyframes pulseShield { 0%,100%{filter:drop-shadow(0 0 8px var(--accent-2))} 50%{filter:drop-shadow(0 0 20px var(--accent-2)) drop-shadow(0 0 40px var(--accent-1))} }
+    .nav-logo span { color:var(--accent-2); }
+    .nav-links { display:flex; align-items:center; gap:32px; list-style:none; }
+    .nav-links a { color:var(--text-3); font-size:14px; letter-spacing:1px; text-decoration:none; font-weight:500; transition:color .2s; text-transform:uppercase; }
+    .nav-links a:hover { color:var(--accent-2); }
+    .nav-cta { display:flex; gap:12px; }
+    .btn-ghost { padding:10px 22px; border:1px solid var(--border-bright); color:var(--accent-2); background:transparent; border-radius:6px; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:2px; cursor:pointer; text-decoration:none; transition:all .25s; }
+    .btn-ghost:hover { background:var(--accent-glow); box-shadow:0 0 20px var(--accent-glow-strong); }
+    .btn-primary { padding:10px 24px; background:linear-gradient(135deg,#0284c7,#0ea5e9); color:#fff; border:none; border-radius:6px; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:2px; cursor:pointer; text-decoration:none; transition:all .25s; box-shadow:0 0 20px rgba(14,165,233,0.35); }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 0 35px rgba(14,165,233,0.6); }
+
+    /* ── Hero ── */
+    #hero {
+      position:relative; z-index:10;
+      min-height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:140px 40px 80px;
+      text-align:center;
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(14,165,233,0.08); border:1px solid var(--border-bright);
+      border-radius:100px; padding:8px 20px;
+      color:var(--accent-2); font-size:12px; font-weight:600; letter-spacing:2px;
+      text-transform:uppercase; margin-bottom:32px;
+      animation:fadeUp .8s ease both;
+    }
+    .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent-2); animation:blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .hero-title {
+      font-family:'Orbitron',monospace;
+      font-size:clamp(42px, 8vw, 88px);
+      font-weight:900;
+      line-height:1.05;
+      margin-bottom:12px;
+      animation:fadeUp .9s .1s ease both;
+    }
+    .hero-title .line1 { display:block; color:var(--text-1); }
+    .hero-title .line2 {
+      display:block;
+      background:linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 40%, #a5f3fc 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));
+    }
+    .hero-subtitle {
+      font-size:18px; color:var(--text-3); max-width:580px; line-height:1.7;
+      margin-bottom:48px; font-weight:300;
+      animation:fadeUp 1s .2s ease both;
+    }
+    .hero-subtitle strong { color:var(--accent-3); font-weight:600; }
+    .hero-cta { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; animation:fadeUp 1s .3s ease both; }
+    .btn-hero-primary {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:16px 40px; background:linear-gradient(135deg,#0284c7,#0ea5e9,#00d4ff);
+      color:#fff; border:none; border-radius:8px;
+      font-family:'Orbitron',monospace; font-size:13px; font-weight:700; letter-spacing:2px;
+      cursor:pointer; text-decoration:none;
+      box-shadow:0 0 40px rgba(0,212,255,0.4), 0 4px 20px rgba(0,0,0,0.5);
+      transition:all .3s; position:relative; overflow:hidden;
+    }
+    .btn-hero-primary::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,transparent,rgba(255,255,255,0.15),transparent);
+      transform:translateX(-100%); transition:transform .4s;
+    }
+    .btn-hero-primary:hover::before { transform:translateX(100%); }
+    .btn-hero-primary:hover { transform:translateY(-3px); box-shadow:0 0 60px rgba(0,212,255,0.6), 0 8px 30px rgba(0,0,0,0.5); }
+    .btn-hero-secondary {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:16px 40px; background:rgba(8,22,45,0.8);
+      color:var(--text-2); border:1px solid var(--border-bright);
+      border-radius:8px; font-family:'Orbitron',monospace; font-size:13px; font-weight:700; letter-spacing:2px;
+      cursor:pointer; text-decoration:none; transition:all .3s;
+      backdrop-filter:blur(10px);
+    }
+    .btn-hero-secondary:hover { background:var(--accent-glow); border-color:var(--accent-2); color:#fff; transform:translateY(-3px); }
+
+    /* ── Floating cards ── */
+    .hero-floating { position:absolute; pointer-events:none; animation:float 6s ease-in-out infinite; }
+    .hero-floating.left { left:5%; top:30%; animation-delay:0s; }
+    .hero-floating.right { right:5%; top:25%; animation-delay:-3s; }
+    @keyframes float { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-20px) rotate(2deg)} }
+    .float-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:12px; padding:16px 20px;
+      backdrop-filter:blur(20px);
+      box-shadow:0 0 30px rgba(0,0,0,0.5), 0 0 20px var(--accent-glow);
+      min-width:180px;
+    }
+    .float-card-header { font-size:11px; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+    .float-card-value { font-family:'Orbitron',monospace; font-size:22px; font-weight:700; color:var(--accent-2); }
+    .float-card-sub { font-size:12px; color:var(--text-3); margin-top:4px; }
+    .threat-item { display:flex; align-items:center; gap:10px; padding:6px 0; }
+    .threat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .threat-dot.red { background:#ef4444; box-shadow:0 0 8px #ef4444; animation:blink 1s infinite; }
+    .threat-dot.green { background:#22c55e; box-shadow:0 0 8px #22c55e; }
+    .threat-text { font-size:12px; color:var(--text-2); }
+
+    /* ── Stats Bar ── */
+    #stats-bar {
+      position:relative; z-index:10;
+      border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+      background:linear-gradient(90deg, rgba(2,8,23,0) 0%, rgba(14,165,233,0.05) 50%, rgba(2,8,23,0) 100%);
+      padding:32px 80px;
+      display:flex; align-items:center; justify-content:space-between; gap:40px;
+    }
+    .stat-item { text-align:center; flex:1; }
+    .stat-value { font-family:'Orbitron',monospace; font-size:clamp(28px,4vw,42px); font-weight:900; color:var(--accent-2); line-height:1; }
+    .stat-label { font-size:12px; color:var(--text-3); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+    .stat-divider { width:1px; height:60px; background:var(--border); }
+
+    /* ── Section Shared ── */
+    section { position:relative; z-index:10; }
+    .section-header { text-align:center; max-width:700px; margin:0 auto 64px; }
+    .section-tag { display:inline-block; font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--accent-2); background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.25); border-radius:100px; padding:6px 16px; margin-bottom:20px; }
+    .section-title { font-family:'Orbitron',monospace; font-size:clamp(28px,4vw,44px); font-weight:900; color:var(--text-1); line-height:1.15; margin-bottom:16px; }
+    .section-title span { color:var(--accent-2); }
+    .section-desc { color:var(--text-3); font-size:16px; line-height:1.7; }
+    .container { max-width:1200px; margin:0 auto; padding:0 40px; }
+
+    /* ── Features ── */
+    #features { padding:100px 0; }
+    .features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .feature-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:16px; padding:32px 28px;
+      backdrop-filter:blur(20px);
+      transition:all .3s; position:relative; overflow:hidden;
+      cursor:default;
+    }
+    .feature-card::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 70%);
+      opacity:0; transition:opacity .3s;
+    }
+    .feature-card:hover { transform:translateY(-8px); border-color:var(--border-bright); box-shadow:0 20px 60px rgba(0,0,0,0.4), 0 0 30px var(--accent-glow); }
+    .feature-card:hover::before { opacity:1; }
+    .feature-card:hover .feature-icon { transform:scale(1.1) rotate(-5deg); filter:drop-shadow(0 0 20px var(--accent-2)); }
+    .feature-icon { font-size:36px; margin-bottom:20px; transition:all .3s; display:inline-block; }
+    .feature-name { font-family:'Orbitron',monospace; font-size:15px; font-weight:700; color:var(--text-1); margin-bottom:10px; letter-spacing:1px; }
+    .feature-desc { color:var(--text-3); font-size:14px; line-height:1.6; }
+    .feature-tag { display:inline-block; margin-top:16px; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border-radius:100px; }
+    .tag-active { background:rgba(34,197,94,0.1); color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+    .tag-critical { background:rgba(239,68,68,0.1); color:#f87171; border:1px solid rgba(239,68,68,0.25); }
+
+    /* ── How it works ── */
+    #how-it-works { padding:100px 0; }
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:0; position:relative; }
+    .steps::before { content:''; position:absolute; top:48px; left:calc(33.33% - 10px); right:calc(33.33% - 10px); height:1px; background:linear-gradient(90deg,var(--accent-1),var(--accent-2),var(--accent-1)); }
+    .step { text-align:center; padding:0 32px; position:relative; }
+    .step-num {
+      width:96px; height:96px; border-radius:50%;
+      background:linear-gradient(135deg,#071526,#0a1f3c);
+      border:2px solid var(--border-bright);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Orbitron',monospace; font-size:28px; font-weight:900; color:var(--accent-2);
+      margin:0 auto 28px;
+      box-shadow:0 0 30px var(--accent-glow), inset 0 0 30px rgba(14,165,233,0.05);
+      transition:all .3s;
+    }
+    .step:hover .step-num { box-shadow:0 0 50px var(--accent-glow-strong), inset 0 0 30px rgba(14,165,233,0.1); border-color:var(--accent-2); }
+    .step-title { font-family:'Orbitron',monospace; font-size:16px; font-weight:700; color:var(--text-1); margin-bottom:12px; }
+    .step-desc { color:var(--text-3); font-size:14px; line-height:1.7; }
+
+    /* ── Dashboard Preview ── */
+    #dashboard-preview { padding:100px 0; }
+    .preview-wrapper {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:20px; overflow:hidden;
+      box-shadow:0 0 80px rgba(0,0,0,0.7), 0 0 40px var(--accent-glow);
+    }
+    .preview-bar { background:#0a1628; padding:14px 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+    .preview-dots { display:flex; gap:7px; }
+    .preview-dot { width:12px; height:12px; border-radius:50%; }
+    .preview-dot:nth-child(1) { background:#ef4444; }
+    .preview-dot:nth-child(2) { background:#f59e0b; }
+    .preview-dot:nth-child(3) { background:#22c55e; }
+    .preview-url { flex:1; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:6px; padding:5px 14px; font-size:12px; color:var(--text-3); text-align:center; font-family:monospace; }
+    .preview-content { display:grid; grid-template-columns:220px 1fr; min-height:420px; }
+    .preview-sidebar { background:#040f1e; border-right:1px solid var(--border); padding:20px; }
+    .preview-sidebar-logo { font-family:'Orbitron',monospace; font-size:13px; font-weight:900; color:var(--text-1); margin-bottom:24px; display:flex; align-items:center; gap:8px; }
+    .preview-nav-item { padding:10px 12px; border-radius:8px; font-size:13px; color:var(--text-3); cursor:default; display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+    .preview-nav-item.active { background:rgba(14,165,233,0.12); color:var(--accent-2); border:1px solid rgba(14,165,233,0.2); }
+    .preview-main { padding:24px; }
+    .preview-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .preview-stat-card { background:#040f1e; border:1px solid var(--border); border-radius:10px; padding:16px; }
+    .preview-stat-label { font-size:10px; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+    .preview-stat-value { font-family:'Orbitron',monospace; font-size:20px; font-weight:700; }
+    .preview-stat-value.blue { color:var(--accent-2); }
+    .preview-stat-value.green { color:#4ade80; }
+    .preview-stat-value.red { color:#f87171; }
+    .preview-stat-value.yellow { color:#facc15; }
+    .preview-log-header { font-size:11px; color:var(--text-3); letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; }
+    .preview-log-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:#040f1e; border:1px solid var(--border); margin-bottom:8px; }
+    .preview-log-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; flex-shrink:0; }
+    .badge-blocked { background:rgba(239,68,68,0.15); color:#f87171; }
+    .badge-ok { background:rgba(34,197,94,0.15); color:#4ade80; }
+    .preview-log-text { font-size:12px; color:var(--text-2); flex:1; }
+    .preview-log-time { font-size:10px; color:var(--text-3); }
+
+    /* ── Protection Layers ── */
+    #protection { padding:100px 0; }
+    .layers-container { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+    .layer-visual { position:relative; height:400px; display:flex; align-items:center; justify-content:center; }
+    .layer-ring {
+      position:absolute; border-radius:50%;
+      border:1px solid var(--border);
+      animation:rotateRing linear infinite;
+    }
+    .layer-ring:nth-child(1) { width:360px; height:360px; border-color:rgba(14,165,233,0.2); animation-duration:20s; }
+    .layer-ring:nth-child(2) { width:280px; height:280px; border-color:rgba(14,165,233,0.3); animation-duration:15s; animation-direction:reverse; }
+    .layer-ring:nth-child(3) { width:200px; height:200px; border-color:rgba(14,165,233,0.4); animation-duration:10s; border-style:dashed; }
+    @keyframes rotateRing { to{transform:rotate(360deg)} }
+    .layer-ring::before { content:''; position:absolute; top:-4px; left:50%; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:var(--accent-2); box-shadow:0 0 10px var(--accent-2); }
+    .layer-center { position:relative; z-index:1; font-size:56px; filter:drop-shadow(0 0 20px var(--accent-2)); }
+    .layers-list { display:flex; flex-direction:column; gap:20px; }
+    .layer-item { display:flex; align-items:flex-start; gap:20px; padding:20px 24px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; transition:all .3s; }
+    .layer-item:hover { border-color:var(--border-bright); background:rgba(14,165,233,0.05); }
+    .layer-item-icon { font-size:24px; flex-shrink:0; margin-top:2px; }
+    .layer-item-title { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; color:var(--text-1); margin-bottom:6px; }
+    .layer-item-desc { font-size:13px; color:var(--text-3); line-height:1.5; }
+    .layer-item-status { font-size:10px; font-weight:700; letter-spacing:1.5px; color:#4ade80; }
+
+    /* ── CTA Section ── */
+    #cta { padding:100px 0; text-align:center; }
+    .cta-box {
+      background:linear-gradient(135deg,rgba(14,165,233,0.08) 0%, rgba(0,212,255,0.04) 100%);
+      border:1px solid var(--border-bright); border-radius:24px; padding:80px;
+      position:relative; overflow:hidden;
+    }
+    .cta-box::before {
+      content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+      background:radial-gradient(ellipse at center, rgba(0,212,255,0.07) 0%, transparent 60%);
+    }
+    .cta-box::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent-1),var(--accent-2),var(--accent-1),transparent);
+    }
+    .cta-title { font-family:'Orbitron',monospace; font-size:clamp(28px,5vw,52px); font-weight:900; color:var(--text-1); margin-bottom:20px; }
+    .cta-title span { color:var(--accent-2); }
+    .cta-desc { color:var(--text-3); font-size:17px; max-width:500px; margin:0 auto 48px; line-height:1.7; }
+    .cta-buttons { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+
+    /* ── Footer ── */
+    footer {
+      position:relative; z-index:10;
+      border-top:1px solid var(--border);
+      padding:48px 80px 32px;
+      background:rgba(2,8,23,0.8);
+    }
+    .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:60px; margin-bottom:40px; }
+    .footer-brand { }
+    .footer-logo { font-family:'Orbitron',monospace; font-size:20px; font-weight:900; color:var(--text-1); letter-spacing:3px; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+    .footer-logo span { color:var(--accent-2); }
+    .footer-tagline { color:var(--text-3); font-size:14px; line-height:1.6; max-width:280px; }
+    .footer-col-title { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent-2); margin-bottom:16px; }
+    .footer-links { list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .footer-links a { color:var(--text-3); font-size:14px; text-decoration:none; transition:color .2s; }
+    .footer-links a:hover { color:var(--accent-2); }
+    .footer-bottom { border-top:1px solid var(--border); padding-top:24px; display:flex; justify-content:space-between; align-items:center; }
+    .footer-copyright { color:var(--text-3); font-size:13px; }
+    .footer-badges { display:flex; gap:16px; }
+    .footer-badge { font-size:11px; color:var(--text-3); border:1px solid var(--border); border-radius:4px; padding:4px 10px; letter-spacing:1px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .reveal { opacity:0; transform:translateY(40px); transition:all .7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-void); }
+    ::-webkit-scrollbar-thumb { background:rgba(14,165,233,0.3); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:var(--accent-1); }
+
+    /* ── Responsive ── */
+    @media(max-width:900px) {
+      nav { padding:16px 24px; } .nav-links { display:none; }
+      #stats-bar { padding:24px; flex-wrap:wrap; } .stat-divider { display:none; }
+      .features-grid { grid-template-columns:1fr 1fr; }
+      .steps { grid-template-columns:1fr; gap:48px; } .steps::before { display:none; }
+      .preview-content { grid-template-columns:1fr; } .preview-sidebar { display:none; }
+      .preview-stats-grid { grid-template-columns:1fr 1fr; }
+      .layers-container { grid-template-columns:1fr; }
+      .layer-visual { height:280px; }
+      .footer-grid { grid-template-columns:1fr 1fr; }
+      .cta-box { padding:40px 24px; }
+    }
+    @media(max-width:600px) {
+      .features-grid { grid-template-columns:1fr; }
+      .hero-floating { display:none; }
+      footer { padding:40px 24px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- 3D Canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ── NAVIGATION ── -->
+<nav id="navbar">
+  <a href="/" class="nav-logo">
+    <span class="shield-icon">🛡️</span>
+    KAIROX<span>BOT</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Protección</a></li>
+    <li><a href="#how-it-works">Cómo funciona</a></li>
+    <li><a href="#dashboard-preview">Dashboard</a></li>
+    <li><a href="#cta">Precios</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="/login" class="btn-ghost">Iniciar Sesión</a>
+    <a href="https://discord.com/oauth2/authorize?client_id=1510764046620688404&permissions=8&integration_type=0&scope=bot" target="_blank" class="btn-primary">+ Invitar Bot →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <!-- Floating card left -->
+  <div class="hero-floating left">
+    <div class="float-card">
+      <div class="float-card-header">🚨 Amenaza detectada</div>
+      <div class="threat-item"><div class="threat-dot red"></div><div class="threat-text">Anti-Ban activado</div></div>
+      <div class="threat-item"><div class="threat-dot green"></div><div class="threat-text">Perpetrador bloqueado</div></div>
+      <div class="threat-item"><div class="threat-dot green"></div><div class="threat-text">Bans revertidos</div></div>
+    </div>
+  </div>
+
+  <!-- Floating card right -->
+  <div class="hero-floating right">
+    <div class="float-card">
+      <div class="float-card-header">📊 Protección activa</div>
+      <div class="float-card-value">2,847</div>
+      <div class="float-card-sub">Amenazas bloqueadas hoy</div>
+    </div>
+  </div>
+
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    Sistema de seguridad activo — v2.4.1
+  </div>
+
+  <h1 class="hero-title">
+    <span class="line1">PROTECCIÓN</span>
+    <span class="line2">ANTI-NUKE</span>
+    <span class="line1" style="font-size:.55em;letter-spacing:8px;color:var(--text-3);font-weight:400">PARA DISCORD</span>
+  </h1>
+
+  <p class="hero-subtitle">
+    Defiende tu servidor con el sistema de seguridad más avanzado.<br>
+    <strong>Detección en tiempo real</strong>, bloqueo automático y monitoreo completo desde un dashboard intuitivo.
+  </p>
+
+  <div class="hero-cta">
+    <a href="https://discord.com/oauth2/authorize?client_id=1510764046620688404&permissions=8&integration_type=0&scope=bot" target="_blank" class="btn-hero-primary">
+      🤖 Invitar a mi servidor
+    </a>
+    <a href="/register" class="btn-hero-secondary">
+      ⚡ Crear cuenta gratis
+    </a>
+  </div>
+</section>
+
+<!-- ── STATS BAR ── -->
+<div id="stats-bar">
+  <div class="stat-item">
+    <div class="stat-value" data-count="12847">0</div>
+    <div class="stat-label">Servidores protegidos</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-value" data-count="4200000">0</div>
+    <div class="stat-label">Usuarios seguros</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-value" data-count="890243">0</div>
+    <div class="stat-label">Amenazas bloqueadas</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-value">99.97<span style="font-size:.5em;color:var(--text-3)">%</span></div>
+    <div class="stat-label">Uptime garantizado</div>
+  </div>
+</div>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Sistema de protección</div>
+      <h2 class="section-title">Defensa <span>multicapa</span><br>contra toda amenaza</h2>
+      <p class="section-desc">Cada módulo de protección actúa de forma independiente y coordinada, cubriendo todos los vectores de ataque conocidos en Discord.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">🚫</div>
+        <div class="feature-name">Anti-Ban</div>
+        <div class="feature-desc">Detecta y revierte baneos masivos en tiempo real. Si alguien banea más de X usuarios en Y segundos, es expulsado automáticamente y los bans son revertidos.</div>
+        <div class="feature-tag tag-active">● Activo</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">👢</div>
+        <div class="feature-name">Anti-Kick</div>
+        <div class="feature-desc">Monitorea expulsiones masivas y aplica la sanción configurada al responsable. Protege la integridad de tu comunidad contra raids internos.</div>
+        <div class="feature-tag tag-active">● Activo</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🏗️</div>
+        <div class="feature-name">Anti-Channel Delete</div>
+        <div class="feature-desc">Bloquea la eliminación masiva de canales. Cuando se detecta actividad anormal, el sistema actúa en milisegundos para detener el daño.</div>
+        <div class="feature-tag tag-active">● Activo</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🎭</div>
+        <div class="feature-name">Anti-Role Delete</div>
+        <div class="feature-desc">Previene la eliminación de roles críticos del servidor. Detecta patrones de eliminación masiva y neutraliza al atacante automáticamente.</div>
+        <div class="feature-tag tag-active">● Activo</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-name">Anti-Webhook</div>
+        <div class="feature-desc">Impide la creación masiva de webhooks que pueden usarse para spam o phishing. Detecta y elimina webhooks no autorizados al instante.</div>
+        <div class="feature-tag tag-critical">⚡ Crítico</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-name">Anti-Bot Add</div>
+        <div class="feature-desc">Controla qué bots pueden unirse al servidor. Los bots no autorizados son expulsados automáticamente, previniendo bots de spam o maliciosos.</div>
+        <div class="feature-tag tag-critical">⚡ Crítico</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Proceso</div>
+      <h2 class="section-title">Activo en <span>3 pasos</span></h2>
+      <p class="section-desc">Configurar KairoxBot tarda menos de 5 minutos. La protección comienza inmediatamente.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <div class="step-title">Regístrate</div>
+        <div class="step-desc">Crea tu cuenta gratuita con email y recibe la confirmación instantánea. Tu panel de control queda listo en segundos.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <div class="step-title">Invita el bot</div>
+        <div class="step-desc">Añade KairoxBot a tu servidor con los permisos necesarios. El bot se configura automáticamente con ajustes óptimos.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <div class="step-title">Monitorea</div>
+        <div class="step-desc">Tu servidor está protegido. Sigue las amenazas en tiempo real desde el dashboard, recibe alertas y ajusta la configuración.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DASHBOARD PREVIEW ── -->
+<section id="dashboard-preview">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Panel de Control</div>
+      <h2 class="section-title">Monitoreo <span>en tiempo real</span></h2>
+      <p class="section-desc">Un dashboard completo que te da visibilidad total sobre la seguridad de tu servidor, con logs detallados y estadísticas en vivo.</p>
+    </div>
+    <div class="preview-wrapper reveal">
+      <div class="preview-bar">
+        <div class="preview-dots">
+          <div class="preview-dot"></div>
+          <div class="preview-dot"></div>
+          <div class="preview-dot"></div>
+        </div>
+        <div class="preview-url">kairoxbot.app/dashboard</div>
+      </div>
+      <div class="preview-content">
+        <div class="preview-sidebar">
+          <div class="preview-sidebar-logo">🛡️ KairoxBot</div>
+          <div class="preview-nav-item active">📊 &nbsp;Overview</div>
+          <div class="preview-nav-item">📋 &nbsp;Logs</div>
+          <div class="preview-nav-item">⚙️ &nbsp;Configuración</div>
+          <div class="preview-nav-item">👥 &nbsp;Whitelist</div>
+          <div class="preview-nav-item">🔔 &nbsp;Alertas</div>
+          <div class="preview-nav-item">🤖 &nbsp;Bot Status</div>
+        </div>
+        <div class="preview-main">
+          <div class="preview-stats-grid">
+            <div class="preview-stat-card">
+              <div class="preview-stat-label">Amenazas hoy</div>
+              <div class="preview-stat-value red">24</div>
+            </div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-label">Bloqueadas</div>
+              <div class="preview-stat-value green">24</div>
+            </div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-label">Miembros</div>
+              <div class="preview-stat-value blue">8,492</div>
+            </div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-label">Whitelist</div>
+              <div class="preview-stat-value yellow">12</div>
+            </div>
+          </div>
+          <div class="preview-log-header">Log de actividad reciente</div>
+          <div class="preview-log-item">
+            <div class="preview-log-badge badge-blocked">BLOQUEADO</div>
+            <div class="preview-log-text">Anti-Ban — <strong>hacker#0001</strong> intentó banear 15 usuarios</div>
+            <div class="preview-log-time">hace 2m</div>
+          </div>
+          <div class="preview-log-item">
+            <div class="preview-log-badge badge-blocked">BLOQUEADO</div>
+            <div class="preview-log-text">Anti-Webhook — Creación masiva de webhooks detectada</div>
+            <div class="preview-log-time">hace 18m</div>
+          </div>
+          <div class="preview-log-item">
+            <div class="preview-log-badge badge-ok">PERMITIDO</div>
+            <div class="preview-log-text">ModBot#1234 añadido por admin (whitelist)</div>
+            <div class="preview-log-time">hace 1h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROTECTION LAYERS ── -->
+<section id="protection">
+  <div class="container">
+    <div class="layers-container">
+      <div class="layer-visual">
+        <div class="layer-ring"></div>
+        <div class="layer-ring"></div>
+        <div class="layer-ring"></div>
+        <div class="layer-center">🛡️</div>
+      </div>
+      <div>
+        <div class="section-tag">Arquitectura de seguridad</div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:32px">Sistema de <span>detección</span><br>inteligente</h2>
+        <div class="layers-list">
+          <div class="layer-item reveal">
+            <div class="layer-item-icon">⚡</div>
+            <div>
+              <div class="layer-item-title">Detección por umbral</div>
+              <div class="layer-item-desc">Define cuántas acciones sospechosas en X segundos activan la protección. Totalmente configurable.</div>
+              <div class="layer-item-status">● ACTIVO</div>
+            </div>
+          </div>
+          <div class="layer-item reveal">
+            <div class="layer-item-icon">🔑</div>
+            <div>
+              <div class="layer-item-title">Sistema de Whitelist</div>
+              <div class="layer-item-desc">Administradores de confianza en la whitelist pueden realizar acciones sin restricciones.</div>
+              <div class="layer-item-status">● ACTIVO</div>
+            </div>
+          </div>
+          <div class="layer-item reveal">
+            <div class="layer-item-icon">⚖️</div>
+            <div>
+              <div class="layer-item-title">Punishments configurables</div>
+              <div class="layer-item-desc">Elige entre derank (quitar roles), kick o ban permanente para el perpetrador detectado.</div>
+              <div class="layer-item-status">● ACTIVO</div>
+            </div>
+          </div>
+          <div class="layer-item reveal">
+            <div class="layer-item-icon">🔔</div>
+            <div>
+              <div class="layer-item-title">Alertas en tiempo real</div>
+              <div class="layer-item-desc">Notificaciones instantáneas por email y canal de Discord cuando se detecta una amenaza.</div>
+              <div class="layer-item-status">● ACTIVO</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-box reveal">
+      <div class="cta-title">¿Listo para proteger<br><span>tu servidor?</span></div>
+      <p class="cta-desc">Únete a miles de comunidades que confían en KairoxBot para mantener sus servidores seguros las 24 horas.</p>
+      <div class="cta-buttons">
+        <a href="https://discord.com/oauth2/authorize?client_id=1510764046620688404&permissions=8&integration_type=0&scope=bot" target="_blank" class="btn-hero-primary">🤖 Invitar el bot</a>
+        <a href="/register" class="btn-hero-secondary">Crear cuenta</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo">🛡️ KAIROX<span>BOT</span></div>
+      <div class="footer-tagline">El sistema de seguridad anti-nuke más avanzado para Discord. Protege tu comunidad con tecnología de vanguardia.</div>
+    </div>
+    <div>
+      <div class="footer-col-title">Producto</div>
+      <ul class="footer-links">
+        <li><a href="#features">Características</a></li>
+        <li><a href="#dashboard-preview">Dashboard</a></li>
+        <li><a href="/register">Empezar gratis</a></li>
+        <li><a href="#">Documentación</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Soporte</div>
+      <ul class="footer-links">
+        <li><a href="https://discord.gg/EykUGGhf" target="_blank">Discord</a></li>
+        <li><a href="/support">Guías</a></li>
+        <li><a href="/support">Estado</a></li>
+        <li><a href="/support">Contacto</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Legal</div>
+      <ul class="footer-links">
+        <li><a href="/privacy">Privacidad</a></li>
+        <li><a href="/terms">Términos</a></li>
+        <li><a href="/cookies">Cookies</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copyright">© KairoxBot Security. Todos los derechos reservados.</div>
+  </div>
+</footer>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── CUSTOM CURSOR ────────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+(function animateCursor() {
+  ringX += (mouseX - ringX) * 0.12;
+  ringY += (mouseY - ringY) * 0.12;
+  cursorRing.style.left = ringX + 'px';
+  cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(animateCursor);
+})();
+
+// ── THREE.JS SCENE ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x020817, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 80;
+
+// — Particles —
+const particleCount = 1800;
+const positions = new Float32Array(particleCount * 3);
+const velocities = new Float32Array(particleCount * 3);
+const colors = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  const i3 = i * 3;
+  positions[i3] = (Math.random() - .5) * 300;
+  positions[i3+1] = (Math.random() - .5) * 200;
+  positions[i3+2] = (Math.random() - .5) * 200;
+  velocities[i3] = (Math.random() - .5) * .015;
+  velocities[i3+1] = (Math.random() - .5) * .01;
+  velocities[i3+2] = (Math.random() - .5) * .008;
+  const t = Math.random();
+  colors[i3] = t * 0.05 + 0.02;
+  colors[i3+1] = t * 0.4 + 0.3;
+  colors[i3+2] = t * 0.3 + 0.7;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+const pMat = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: .75, sizeAttenuation: true });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// — Floating Icosahedra (shields) —
+const shieldGeo = new THREE.IcosahedronGeometry(6, 0);
+const shieldMat = new THREE.MeshBasicMaterial({ color: 0x0ea5e9, wireframe: true, transparent: true, opacity: .25 });
+const shields = [];
+for (let i = 0; i < 6; i++) {
+  const m = new THREE.Mesh(shieldGeo, shieldMat.clone());
+  m.position.set((Math.random()-0.5)*160, (Math.random()-0.5)*120, (Math.random()-0.5)*80 - 30);
+  m.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+  m.material.opacity = Math.random() * .2 + .08;
+  const scale = Math.random() * .8 + .4;
+  m.scale.setScalar(scale);
+  scene.add(m);
+  shields.push({ mesh: m, rotSpeed: { x: (Math.random()-.5)*.006, y: (Math.random()-.5)*.008, z: (Math.random()-.5)*.004 }, floatOffset: Math.random()*Math.PI*2 });
+}
+
+// — Central Shield Ring —
+const ringGeo = new THREE.TorusGeometry(22, 0.4, 8, 60);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: .3 });
+const ring1 = new THREE.Mesh(ringGeo, ringMat);
+scene.add(ring1);
+
+const ringGeo2 = new THREE.TorusGeometry(30, 0.25, 8, 80);
+const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: .15 });
+const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+ring2.rotation.x = Math.PI / 3;
+scene.add(ring2);
+
+// — Central Dodecahedron —
+const coreGeo = new THREE.DodecahedronGeometry(8, 0);
+const coreMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, wireframe: true, transparent: true, opacity: .5 });
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
+
+// — Outer hexagon grid —
+const gridGeo = new THREE.PlaneGeometry(400, 300, 40, 30);
+const gridMat = new THREE.MeshBasicMaterial({ color: 0x0a2040, wireframe: true, transparent: true, opacity: .12 });
+const grid = new THREE.Mesh(gridGeo, gridMat);
+grid.rotation.x = -Math.PI / 2.5;
+grid.position.y = -60;
+grid.position.z = -20;
+scene.add(grid);
+
+// — Mouse interaction —
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => { mx = (e.clientX / window.innerWidth - .5) * 2; my = -(e.clientY / window.innerHeight - .5) * 2; });
+
+let targetX = 0, targetY = 0;
+const clock = new THREE.Clock();
+
+// — Animate —
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  // Smooth camera follow
+  targetX += (mx * 3 - targetX) * .04;
+  targetY += (my * 2 - targetY) * .04;
+  camera.position.x = targetX;
+  camera.position.y = targetY;
+  camera.lookAt(scene.position);
+
+  // Particles drift
+  const posArr = pGeo.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    const i3 = i * 3;
+    posArr[i3]   += velocities[i3];
+    posArr[i3+1] += velocities[i3+1];
+    posArr[i3+2] += velocities[i3+2];
+    if (Math.abs(posArr[i3]) > 150)   velocities[i3]   *= -1;
+    if (Math.abs(posArr[i3+1]) > 100) velocities[i3+1] *= -1;
+    if (Math.abs(posArr[i3+2]) > 100) velocities[i3+2] *= -1;
+  }
+  pGeo.attributes.position.needsUpdate = true;
+
+  // Shields float and rotate
+  shields.forEach((s, i) => {
+    s.mesh.rotation.x += s.rotSpeed.x;
+    s.mesh.rotation.y += s.rotSpeed.y;
+    s.mesh.rotation.z += s.rotSpeed.z;
+    s.mesh.position.y += Math.sin(t * .4 + s.floatOffset) * .04;
+    s.mesh.material.opacity = (.1 + Math.abs(Math.sin(t * .3 + i)) * .15);
+  });
+
+  // Core pulse
+  const pulse = 1 + Math.sin(t * 1.5) * .06;
+  core.scale.setScalar(pulse);
+  core.rotation.y += .007;
+  core.rotation.x += .004;
+  coreMat.opacity = .4 + Math.sin(t * 2) * .15;
+
+  // Rings
+  ring1.rotation.z += .004;
+  ring1.rotation.x = Math.sin(t * .3) * .2;
+  ringMat.opacity = .15 + Math.sin(t * 1.5) * .12;
+
+  ring2.rotation.y += .006;
+  ring2.rotation.z += .003;
+
+  particles.rotation.y += .0005;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── SCROLL EFFECTS ──────────────────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── REVEAL ON SCROLL ────────────────────────────────────────────────────────
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      const delay = (Array.from(revealEls).indexOf(e.target) % 3) * 100;
+      setTimeout(() => e.target.classList.add('visible'), delay);
+    }
+  });
+}, { threshold: .15 });
+revealEls.forEach(el => observer.observe(el));
+
+// ── COUNTER ANIMATION ───────────────────────────────────────────────────────
+function animateCount(el, end, duration = 2200) {
+  const start = 0;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(eased * end);
+    el.textContent = current.toLocaleString('es');
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = end.toLocaleString('es');
+  }
+  requestAnimationFrame(step);
+}
+
+const statsObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.stat-value[data-count]').forEach(el => {
+        animateCount(el, parseInt(el.dataset.count));
+      });
+      statsObs.disconnect();
+    }
+  });
+}, { threshold: .5 });
+const statsBar = document.getElementById('stats-bar');
+if (statsBar) statsObs.observe(statsBar);
+</script>
+</body>
+</html>

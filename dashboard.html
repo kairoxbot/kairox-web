@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#020817; --surface:#040f1e; --card:rgba(8,22,45,0.85);
+      --accent:#0ea5e9; --accent2:#00d4ff; --glow:rgba(0,212,255,.15);
+      --text1:#f0f9ff; --text2:#94a3b8; --border:rgba(14,165,233,.2);
+      --danger:#ef4444; --success:#22c55e; --warning:#f59e0b;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text1);font-family:'Exo 2',sans-serif;min-height:100vh;display:flex;}
+
+    /* ── Sidebar ── */
+    .sidebar{width:240px;min-height:100vh;background:rgba(4,15,30,0.95);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;transition:transform .3s;}
+    .sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sidebar-logo .icon{font-size:24px;filter:drop-shadow(0 0 8px var(--accent2));}
+    .sidebar-logo span{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;letter-spacing:2px;color:var(--text1);}
+    .sidebar-logo span b{color:var(--accent2);}
+    .sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;}
+    .nav-section{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;padding:12px 8px 6px;margin-top:4px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .2s;color:var(--text2);font-size:13px;font-weight:500;border:1px solid transparent;text-decoration:none;}
+    .nav-item:hover{background:rgba(14,165,233,.08);color:var(--text1);border-color:rgba(14,165,233,.12);}
+    .nav-item.active{background:rgba(14,165,233,.12);color:var(--accent2);border-color:rgba(14,165,233,.2);}
+    .nav-item .ni{font-size:16px;width:20px;text-align:center;}
+    .sidebar-footer{padding:16px;border-top:1px solid var(--border);}
+    .user-info{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(14,165,233,.05);border:1px solid var(--border);}
+    .user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+    .user-name{font-size:13px;font-weight:600;color:var(--text1);}
+    .user-plan{font-size:10px;color:var(--accent2);letter-spacing:1px;text-transform:uppercase;}
+    .btn-logout{width:100%;margin-top:8px;padding:8px;background:transparent;border:1px solid rgba(239,68,68,.2);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;transition:all .2s;font-family:'Exo 2',sans-serif;}
+    .btn-logout:hover{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);}
+
+    /* ── Main ── */
+    .main{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+
+    /* ── Topbar ── */
+    .topbar{padding:18px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(2,8,23,0.7);backdrop-filter:blur(20px);position:sticky;top:0;z-index:50;}
+    .topbar-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;letter-spacing:2px;color:var(--text1);}
+    .topbar-title span{color:var(--accent2);}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:blink 2s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+    .status-text{font-size:12px;color:var(--text2);}
+    .server-selector{background:rgba(8,22,45,0.9);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text1);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;cursor:pointer;}
+
+    /* ── Content ── */
+    .content{flex:1;padding:32px;}
+
+    /* ── Stats grid ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s;}
+    .stat-card:hover{border-color:rgba(14,165,233,.4);}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;}
+    .stat-card:hover::before{opacity:1;}
+    .stat-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:10px;}
+    .stat-value{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--text1);margin-bottom:4px;}
+    .stat-value.danger{color:#f87171;}
+    .stat-value.success{color:#4ade80;}
+    .stat-sub{font-size:12px;color:var(--text2);}
+    .stat-icon{position:absolute;right:16px;top:16px;font-size:22px;opacity:.4;}
+
+    /* ── Two-col layout ── */
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
+    .row.wide{grid-template-columns:2fr 1fr;}
+
+    /* ── Panel ── */
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .panel-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text1);text-transform:uppercase;}
+    .panel-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:rgba(14,165,233,.1);color:var(--accent2);border:1px solid rgba(14,165,233,.2);letter-spacing:1px;}
+    .panel-body{padding:20px;}
+
+    /* ── Protection toggles ── */
+    .toggle-list{display:flex;flex-direction:column;gap:10px;}
+    .toggle-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(4,15,30,0.6);border:1px solid rgba(14,165,233,.08);border-radius:10px;transition:border-color .2s;}
+    .toggle-item:hover{border-color:rgba(14,165,233,.2);}
+    .toggle-left{display:flex;align-items:center;gap:10px;}
+    .toggle-icon{font-size:16px;width:24px;text-align:center;}
+    .toggle-name{font-size:13px;font-weight:500;color:var(--text1);}
+    .toggle-desc{font-size:11px;color:var(--text2);margin-top:1px;}
+    /* Switch */
+    .switch{position:relative;width:42px;height:22px;flex-shrink:0;}
+    .switch input{opacity:0;width:0;height:0;}
+    .switch-track{position:absolute;inset:0;background:rgba(14,165,233,.15);border:1px solid var(--border);border-radius:100px;cursor:pointer;transition:all .3s;}
+    .switch input:checked + .switch-track{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:var(--accent2);box-shadow:0 0 12px rgba(0,212,255,.3);}
+    .switch-track::before{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+    .switch input:checked + .switch-track::before{transform:translateX(20px);}
+
+    /* ── Events table ── */
+    .events-table{width:100%;border-collapse:collapse;}
+    .events-table th{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1.5px;color:var(--text2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);background:rgba(4,15,30,.4);}
+    .events-table td{font-size:13px;color:var(--text2);padding:11px 12px;border-bottom:1px solid rgba(14,165,233,.06);vertical-align:middle;}
+    .events-table tr:last-child td{border-bottom:none;}
+    .events-table tr:hover td{background:rgba(14,165,233,.03);}
+    .badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.5px;}
+    .badge-critical{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+    .badge-high{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.25);}
+    .badge-medium{background:rgba(14,165,233,.12);color:var(--accent2);border:1px solid rgba(14,165,233,.25);}
+    .badge-low{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);}
+    .event-type{font-family:'Orbitron',monospace;font-size:10px;color:var(--text1);letter-spacing:.5px;}
+    .event-user{color:var(--accent2);font-size:12px;}
+
+    /* ── Whitelist ── */
+    .whitelist-input-wrap{display:flex;gap:8px;margin-bottom:14px;}
+    .whitelist-input{flex:1;background:rgba(4,15,30,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text1);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;transition:all .2s;}
+    .whitelist-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+    .whitelist-input::placeholder{color:#334155;}
+    .btn-add{padding:10px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .btn-add:hover{box-shadow:0 0 20px rgba(14,165,233,.4);}
+    .whitelist-tags{display:flex;flex-wrap:wrap;gap:8px;}
+    .whitelist-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text2);}
+    .whitelist-tag button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;line-height:1;transition:color .2s;padding:0;}
+    .whitelist-tag button:hover{color:#f87171;}
+
+    /* ── Chart placeholder ── */
+    .chart-wrap{height:160px;position:relative;display:flex;align-items:flex-end;gap:6px;padding-top:16px;}
+    .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .chart-bar{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--accent2),rgba(14,165,233,.3));transition:height .6s cubic-bezier(.34,1.56,.64,1);min-height:4px;}
+    .chart-label{font-size:10px;color:var(--text2);}
+
+    /* ── Threshold inputs ── */
+    .threshold-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .threshold-item label{display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+    .threshold-item input[type=number]{width:100%;background:rgba(4,15,30,.8);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text1);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;transition:all .2s;}
+    .threshold-item input:focus{border-color:var(--accent);}
+
+    /* ── Action select ── */
+    .action-select{width:100%;background:rgba(4,15,30,.8);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text1);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;transition:border-color .2s;cursor:pointer;margin-bottom:12px;}
+    .action-select:focus{border-color:var(--accent);}
+
+    /* ── Save button ── */
+    .btn-save{width:100%;padding:12px;background:linear-gradient(135deg,#0284c7,#0ea5e9,#00c4f0);color:#fff;border:none;border-radius:10px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 0 24px rgba(14,165,233,.3);transition:all .25s;}
+    .btn-save:hover{transform:translateY(-1px);box-shadow:0 0 40px rgba(14,165,233,.45);}
+    .btn-save:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* ── Toast ── */
+    .toast{position:fixed;bottom:24px;right:24px;z-index:999;background:rgba(8,22,45,.95);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text1);box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.toast-success{border-color:rgba(34,197,94,.3);}
+    .toast.toast-error{border-color:rgba(239,68,68,.3);}
+
+    /* ── Empty state ── */
+    .empty{text-align:center;padding:40px 20px;color:var(--text2);}
+    .empty .empty-icon{font-size:36px;margin-bottom:12px;opacity:.5;}
+    .empty p{font-size:13px;}
+
+    /* ── Loading skeleton ── */
+    .skeleton{background:linear-gradient(90deg,rgba(14,165,233,.05) 25%,rgba(14,165,233,.1) 50%,rgba(14,165,233,.05) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* ── No server ── */
+    .no-server{text-align:center;padding:60px 40px;}
+    .no-server .ns-icon{font-size:56px;margin-bottom:16px;opacity:.6;}
+    .no-server h2{font-family:'Orbitron',monospace;font-size:18px;color:var(--text1);margin-bottom:10px;}
+    .no-server p{color:var(--text2);font-size:14px;line-height:1.6;max-width:400px;margin:0 auto 24px;}
+    .btn-invite{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;border-radius:10px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;transition:all .25s;}
+    .btn-invite:hover{box-shadow:0 0 30px rgba(14,165,233,.4);transform:translateY(-2px);}
+
+    /* ── Responsive ── */
+    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr);}.row,.row.wide{grid-template-columns:1fr;}}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%);}.main{margin-left:0;}.topbar{padding:14px 20px;}.content{padding:20px;}}
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="icon">🛡️</span>
+    <span>KAIROX<b>BOT</b></span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-item active" onclick="showSection('overview')" href="#">
+      <span class="ni">📊</span> Resumen
+    </a>
+    <a class="nav-item" onclick="showSection('events')" href="#">
+      <span class="ni">🚨</span> Eventos
+    </a>
+
+    <div class="nav-section">Configuración</div>
+    <a class="nav-item" onclick="showSection('protection')" href="#">
+      <span class="ni">🛡️</span> Protección
+    </a>
+    <a class="nav-item" onclick="showSection('whitelist')" href="#">
+      <span class="ni">✅</span> Whitelist
+    </a>
+    <a class="nav-item" onclick="showSection('settings')" href="#">
+      <span class="ni">⚙️</span> Ajustes
+    </a>
+
+    <div class="nav-section">Ayuda</div>
+    <a class="nav-item" href="/support">
+      <span class="ni">💬</span> Soporte
+    </a>
+    <a class="nav-item" href="https://discord.gg/EykUGGhf" target="_blank">
+      <span class="ni">🔗</span> Discord
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar">K</div>
+      <div>
+        <div class="user-name" id="user-name">Cargando...</div>
+        <div class="user-plan" id="user-plan">free</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">⏻ Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">KAIROX<span>BOT</span> — Dashboard</div>
+    <div class="topbar-right">
+      <div class="status-dot"></div>
+      <span class="status-text">Sistema activo</span>
+      <select class="server-selector" id="server-selector" onchange="selectServer(this.value)">
+        <option value="">Selecciona un servidor</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+
+    <!-- ── LOADING ── -->
+    <div id="section-loading" style="padding:60px;text-align:center;color:var(--text2);">
+      <div style="font-size:36px;margin-bottom:12px;animation:spin 1s linear infinite;display:inline-block;">⚙️</div>
+      <p style="font-family:'Orbitron',monospace;letter-spacing:2px;font-size:12px;">CARGANDO...</p>
+    </div>
+
+    <!-- ── NO SERVER ── -->
+    <div id="section-noserver" style="display:none;">
+      <div class="no-server">
+        <div class="ns-icon">🤖</div>
+        <h2>Añade KairoxBot a tu servidor</h2>
+        <p>No tienes ningún servidor vinculado aún. Invita el bot a tu servidor Discord para empezar a protegerlo.</p>
+        <a class="btn-invite" id="bot-invite-link" href="#" target="_blank">🚀 INVITAR BOT</a>
+      </div>
+    </div>
+
+    <!-- ── OVERVIEW ── -->
+    <div id="section-overview" style="display:none;">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Eventos</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub">Todas las amenazas</div>
+          <span class="stat-icon">📋</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hoy</div>
+          <div class="stat-value" id="stat-today">—</div>
+          <div class="stat-sub">Eventos en 24h</div>
+          <span class="stat-icon">📅</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Críticos</div>
+          <div class="stat-value danger" id="stat-critical">—</div>
+          <div class="stat-sub">Alta prioridad</div>
+          <span class="stat-icon">🚨</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Esta Semana</div>
+          <div class="stat-value" id="stat-week">—</div>
+          <div class="stat-sub">Últimos 7 días</div>
+          <span class="stat-icon">📈</span>
+        </div>
+      </div>
+
+      <div class="row wide">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Actividad — Últimos 7 días</span>
+            <span class="panel-badge">CHART</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-wrap" id="chart-bars"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Info del Servidor</span>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span style="color:var(--text2);">Nombre</span>
+                <span style="color:var(--text1);font-weight:600;" id="srv-name">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span style="color:var(--text2);">Miembros</span>
+                <span style="color:var(--text1);font-weight:600;" id="srv-members">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span style="color:var(--text2);">Estado</span>
+                <span class="badge badge-medium" id="srv-status">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span style="color:var(--text2);">Guild ID</span>
+                <span style="color:var(--text2);font-family:monospace;font-size:11px;" id="srv-id">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent events preview -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Últimos Eventos</span>
+          <span class="panel-badge" onclick="showSection('events')" style="cursor:pointer;">VER TODOS →</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="recent-events-wrap">
+            <div class="empty"><div class="empty-icon">🛡️</div><p>Sin eventos recientes. ¡Tu servidor está seguro!</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EVENTS ── -->
+    <div id="section-events" style="display:none;">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Registro de Eventos</span>
+          <div style="display:flex;gap:8px;">
+            <select id="filter-severity" onchange="loadEvents()" style="background:rgba(4,15,30,.8);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text1);font-size:12px;outline:none;">
+              <option value="">Todos</option>
+              <option value="critical">Crítico</option>
+              <option value="high">Alto</option>
+              <option value="medium">Medio</option>
+              <option value="low">Bajo</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="events-table">
+            <thead>
+              <tr>
+                <th>TIPO</th><th>SEVERIDAD</th><th>USUARIO</th><th>ACCIÓN</th><th>DETALLES</th><th>FECHA</th>
+              </tr>
+            </thead>
+            <tbody id="events-tbody">
+              <tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><p>Sin eventos registrados.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="events-pagination" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text2);">
+          <span id="events-info"></span>
+          <div style="display:flex;gap:8px;">
+            <button onclick="changePage(-1)" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 12px;color:var(--text2);cursor:pointer;">‹ Anterior</button>
+            <button onclick="changePage(1)" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 12px;color:var(--text2);cursor:pointer;">Siguiente ›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROTECTION ── -->
+    <div id="section-protection" style="display:none;">
+      <div class="row">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Módulos de Protección</span>
+            <span class="panel-badge">ANTI-NUKE</span>
+          </div>
+          <div class="panel-body">
+            <div class="toggle-list" id="toggles-list"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Umbrales & Castigo</span>
+          </div>
+          <div class="panel-body">
+            <div style="margin-bottom:14px;">
+              <label style="display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">Acción al detectar amenaza</label>
+              <select class="action-select" id="punishment-select">
+                <option value="strip_roles">Quitar roles</option>
+                <option value="kick">Expulsar (kick)</option>
+                <option value="ban">Banear</option>
+                <option value="timeout">Timeout (1h)</option>
+              </select>
+            </div>
+            <div class="threshold-grid">
+              <div class="threshold-item">
+                <label>Bans / 10s</label>
+                <input type="number" id="th-ban" min="1" max="20" value="3">
+              </div>
+              <div class="threshold-item">
+                <label>Kicks / 10s</label>
+                <input type="number" id="th-kick" min="1" max="20" value="3">
+              </div>
+              <div class="threshold-item">
+                <label>Canales / 10s</label>
+                <input type="number" id="th-channel" min="1" max="20" value="3">
+              </div>
+              <div class="threshold-item">
+                <label>Roles / 10s</label>
+                <input type="number" id="th-role" min="1" max="20" value="3">
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(4,15,30,.6);border:1px solid rgba(14,165,233,.08);border-radius:10px;">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text1);">Notificar al dueño</div>
+                <div style="font-size:11px;color:var(--text2);">DM al propietario del servidor</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="notify-owner"><span class="switch-track"></span></label>
+            </div>
+            <button class="btn-save" style="margin-top:16px;" onclick="saveSettings()">💾 GUARDAR CAMBIOS</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WHITELIST ── -->
+    <div id="section-whitelist" style="display:none;">
+      <div class="panel" style="max-width:640px;">
+        <div class="panel-header">
+          <span class="panel-title">Whitelist de Usuarios</span>
+          <span class="panel-badge" id="wl-count">0 usuarios</span>
+        </div>
+        <div class="panel-body">
+          <p style="color:var(--text2);font-size:13px;margin-bottom:16px;line-height:1.6;">Los usuarios en la whitelist no serán sancionados por el sistema anti-nuke. Añade aquí a tus administradores de confianza usando su <strong style="color:var(--accent2);">ID de Discord</strong>.</p>
+          <div class="whitelist-input-wrap">
+            <input class="whitelist-input" type="text" id="wl-input" placeholder="ID de Discord (ej: 123456789012345678)">
+            <button class="btn-add" onclick="addWhitelist()">+ AÑADIR</button>
+          </div>
+          <div class="whitelist-tags" id="wl-tags">
+            <div class="empty"><div class="empty-icon">✅</div><p>No hay usuarios en la whitelist.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="section-settings" style="display:none;">
+      <div class="panel" style="max-width:560px;">
+        <div class="panel-header">
+          <span class="panel-title">Canales del Sistema</span>
+        </div>
+        <div class="panel-body">
+          <p style="color:var(--text2);font-size:13px;margin-bottom:20px;line-height:1.6;">Configura los IDs de canal de Discord donde KairoxBot enviará los logs y alertas de seguridad.</p>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">Canal de Alertas</label>
+              <input type="text" id="alert-channel" class="whitelist-input" placeholder="ID del canal de alertas" style="width:100%;">
+            </div>
+            <div>
+              <label style="display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">Canal de Logs</label>
+              <input type="text" id="log-channel" class="whitelist-input" placeholder="ID del canal de logs" style="width:100%;">
+            </div>
+          </div>
+          <button class="btn-save" style="margin-top:20px;" onclick="saveSettings()">💾 GUARDAR</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────
+let currentUser = null;
+let currentServerId = null;
+let currentSettings = {};
+let whitelist = [];
+let eventsPage = 1;
+
+// ── Sections ─────────────────────────────────────────────
+function showSection(name) {
+  ['loading','noserver','overview','events','protection','whitelist','settings'].forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById('section-' + name);
+  if (target) target.style.display = 'block';
+
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const map = {overview:0,events:1,protection:2,whitelist:3,settings:4};
+  const items = document.querySelectorAll('.nav-item');
+  if (map[name] !== undefined && items[map[name]]) items[map[name]].classList.add('active');
+
+  if (name === 'events') loadEvents();
+  if (name === 'overview' && currentServerId) loadStats();
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.className = `toast toast-${type} show`;
+  t.innerHTML = `${type==='success'?'✅':'⚠️'} ${msg}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Auth ──────────────────────────────────────────────────
+async function loadUser() {
+  try {
+    const res = await fetch('/auth/me', {credentials:'include'});
+    if (!res.ok) { window.location.href = '/login?redirect=/dashboard'; return; }
+    currentUser = await res.json();
+    document.getElementById('user-name').textContent = currentUser.username;
+    document.getElementById('user-plan').textContent = currentUser.plan || 'free';
+    document.getElementById('user-avatar').textContent = currentUser.username[0].toUpperCase();
+    loadServers();
+  } catch { window.location.href = '/login?redirect=/dashboard'; }
+}
+
+async function logout() {
+  await fetch('/auth/logout', {method:'POST', credentials:'include'});
+  window.location.href = '/login';
+}
+
+// ── Servers ────────────────────────────────────────────────
+async function loadServers() {
+  try {
+    const res = await fetch('/api/servers', {credentials:'include'});
+    const servers = await res.json();
+    const sel = document.getElementById('server-selector');
+    sel.innerHTML = '<option value="">Selecciona un servidor</option>';
+
+    if (!servers.length) { showSection('noserver'); return; }
+
+    servers.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.guildId; opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+
+    // Auto-select first
+    sel.value = servers[0].guildId;
+    selectServer(servers[0].guildId);
+
+    // Bot invite link
+    const inviteLink = document.getElementById('bot-invite-link');
+    if (inviteLink) inviteLink.href = `https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot+applications.commands&permissions=8`;
+  } catch { toast('Error cargando servidores', 'error'); }
+}
+
+function selectServer(guildId) {
+  if (!guildId) return;
+  currentServerId = guildId;
+  showSection('overview');
+  loadStats();
+  loadServerSettings();
+}
+
+// ── Stats ──────────────────────────────────────────────────
+async function loadStats() {
+  if (!currentServerId) return;
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/stats`, {credentials:'include'});
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.totalEvents ?? 0;
+    document.getElementById('stat-today').textContent = data.todayEvents ?? 0;
+    document.getElementById('stat-critical').textContent = data.criticalEvents ?? 0;
+    document.getElementById('stat-week').textContent = data.weekEvents ?? 0;
+    document.getElementById('srv-name').textContent = data.server?.name || '—';
+    document.getElementById('srv-members').textContent = data.server?.memberCount?.toLocaleString() || '—';
+    document.getElementById('srv-id').textContent = currentServerId;
+    document.getElementById('srv-status').textContent = data.server?.isActive ? '✅ Activo' : '⛔ Inactivo';
+
+    // Chart
+    buildChart(data.eventsPerDay || []);
+    // Recent events
+    loadRecentEvents();
+  } catch { toast('Error cargando estadísticas', 'error'); }
+}
+
+function buildChart(data) {
+  const wrap = document.getElementById('chart-bars');
+  const days = ['L','M','X','J','V','S','D'];
+  const now = new Date();
+  const labels = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    labels.push(d.toISOString().slice(0,10));
+  }
+  const max = Math.max(...data.map(d=>d.count), 1);
+  wrap.innerHTML = labels.map((date, i) => {
+    const found = data.find(d => d._id === date);
+    const count = found ? found.count : 0;
+    const pct = Math.max((count/max)*130, 4);
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${pct}px;" title="${count} eventos"></div>
+      <div class="chart-label">${days[i]}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Events ────────────────────────────────────────────────
+async function loadRecentEvents() {
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/events?limit=5`, {credentials:'include'});
+    const data = await res.json();
+    const wrap = document.getElementById('recent-events-wrap');
+    if (!data.events?.length) { wrap.innerHTML = '<div class="empty"><div class="empty-icon">🛡️</div><p>Sin eventos recientes.</p></div>'; return; }
+    wrap.innerHTML = renderEventsTable(data.events);
+  } catch {}
+}
+
+async function loadEvents() {
+  if (!currentServerId) return;
+  const severity = document.getElementById('filter-severity')?.value || '';
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/events?page=${eventsPage}&limit=15&severity=${severity}`, {credentials:'include'});
+    const data = await res.json();
+    const tbody = document.getElementById('events-tbody');
+    if (!data.events?.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><p>Sin eventos registrados.</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = data.events.map(e => `
+        <tr>
+          <td><span class="event-type">${e.type}</span></td>
+          <td><span class="badge badge-${e.severity}">${e.severity.toUpperCase()}</span></td>
+          <td><span class="event-user">${e.targetUsername || '—'}</span></td>
+          <td style="color:var(--text1);font-size:12px;">${e.actionTaken || '—'}</td>
+          <td style="font-size:12px;">${e.details || '—'}</td>
+          <td style="font-size:11px;white-space:nowrap;">${new Date(e.timestamp).toLocaleString('es-CL')}</td>
+        </tr>`).join('');
+    }
+    const info = document.getElementById('events-info');
+    if (info) info.textContent = `Página ${data.page} de ${data.pages} — ${data.total} eventos`;
+  } catch { toast('Error cargando eventos', 'error'); }
+}
+
+function renderEventsTable(events) {
+  return `<table class="events-table">
+    <thead><tr><th>TIPO</th><th>SEVERIDAD</th><th>USUARIO</th><th>ACCIÓN</th><th>FECHA</th></tr></thead>
+    <tbody>${events.map(e=>`<tr>
+      <td><span class="event-type">${e.type}</span></td>
+      <td><span class="badge badge-${e.severity}">${e.severity.toUpperCase()}</span></td>
+      <td><span class="event-user">${e.targetUsername||'—'}</span></td>
+      <td style="font-size:12px;">${e.actionTaken||'—'}</td>
+      <td style="font-size:11px;white-space:nowrap;">${new Date(e.timestamp).toLocaleString('es-CL')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function changePage(dir) {
+  eventsPage = Math.max(1, eventsPage + dir);
+  loadEvents();
+}
+
+// ── Settings ───────────────────────────────────────────────
+const TOGGLES = [
+  {key:'antiNuke',       icon:'🛡️', name:'Anti-Nuke Global',          desc:'Protección completa contra ataques'},
+  {key:'antiMassBan',    icon:'🚫', name:'Anti Mass-Ban',              desc:'Detecta baneos masivos'},
+  {key:'antiMassKick',   icon:'👢', name:'Anti Mass-Kick',             desc:'Detecta expulsiones masivas'},
+  {key:'antiChannelDelete', icon:'📺', name:'Anti Channel-Delete',    desc:'Protege canales de eliminación'},
+  {key:'antiRoleDelete', icon:'🎭', name:'Anti Role-Delete',           desc:'Protege roles de eliminación'},
+  {key:'antiWebhookCreate',icon:'🪝', name:'Anti Webhook',            desc:'Detecta webhooks sospechosos'},
+  {key:'antiBotAdd',     icon:'🤖', name:'Anti Bot-Add',               desc:'Alerta al añadir bots no autorizados'},
+];
+
+async function loadServerSettings() {
+  if (!currentServerId) return;
+  try {
+    const res = await fetch(`/api/server/${currentServerId}`, {credentials:'include'});
+    const srv = await res.json();
+    currentSettings = srv.settings || {};
+    whitelist = currentSettings.whitelist || [];
+
+    // Render toggles
+    const list = document.getElementById('toggles-list');
+    if (list) list.innerHTML = TOGGLES.map(t => `
+      <div class="toggle-item">
+        <div class="toggle-left">
+          <span class="toggle-icon">${t.icon}</span>
+          <div>
+            <div class="toggle-name">${t.name}</div>
+            <div class="toggle-desc">${t.desc}</div>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-${t.key}" ${currentSettings[t.key] ? 'checked' : ''} onchange="onToggle('${t.key}', this.checked)">
+          <span class="switch-track"></span>
+        </label>
+      </div>`).join('');
+
+    // Punishment & thresholds
+    const ps = document.getElementById('punishment-select');
+    if (ps) ps.value = currentSettings.punishmentAction || 'strip_roles';
+    const thBan = document.getElementById('th-ban'); if(thBan) thBan.value = currentSettings.banThreshold||3;
+    const thKick = document.getElementById('th-kick'); if(thKick) thKick.value = currentSettings.kickThreshold||3;
+    const thCh = document.getElementById('th-channel'); if(thCh) thCh.value = currentSettings.channelDeleteThreshold||3;
+    const thRl = document.getElementById('th-role'); if(thRl) thRl.value = currentSettings.roleDeleteThreshold||3;
+    const no = document.getElementById('notify-owner'); if(no) no.checked = !!currentSettings.notifyOwner;
+
+    // Channels
+    const ac = document.getElementById('alert-channel'); if(ac) ac.value = currentSettings.alertChannelId||'';
+    const lc = document.getElementById('log-channel'); if(lc) lc.value = currentSettings.logChannelId||'';
+
+    // Whitelist
+    renderWhitelist();
+  } catch { toast('Error cargando configuración', 'error'); }
+}
+
+function onToggle(key, val) { currentSettings[key] = val; }
+
+async function saveSettings() {
+  if (!currentServerId) return;
+  const body = {
+    ...Object.fromEntries(TOGGLES.map(t => [t.key, !!document.getElementById('toggle-'+t.key)?.checked])),
+    punishmentAction: document.getElementById('punishment-select')?.value || 'strip_roles',
+    banThreshold: parseInt(document.getElementById('th-ban')?.value) || 3,
+    kickThreshold: parseInt(document.getElementById('th-kick')?.value) || 3,
+    channelDeleteThreshold: parseInt(document.getElementById('th-channel')?.value) || 3,
+    roleDeleteThreshold: parseInt(document.getElementById('th-role')?.value) || 3,
+    notifyOwner: !!document.getElementById('notify-owner')?.checked,
+    alertChannelId: document.getElementById('alert-channel')?.value || null,
+    logChannelId: document.getElementById('log-channel')?.value || null,
+  };
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/settings`, {
+      method:'PATCH', credentials:'include',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (res.ok) toast('Configuración guardada correctamente ✅');
+    else toast('Error al guardar', 'error');
+  } catch { toast('Error de conexión', 'error'); }
+}
+
+// ── Whitelist ──────────────────────────────────────────────
+function renderWhitelist() {
+  const wrap = document.getElementById('wl-tags');
+  const count = document.getElementById('wl-count');
+  if (count) count.textContent = `${whitelist.length} usuario${whitelist.length!==1?'s':''}`;
+  if (!wrap) return;
+  if (!whitelist.length) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No hay usuarios en la whitelist.</p></div>';
+    return;
+  }
+  wrap.innerHTML = whitelist.map(id => `
+    <div class="whitelist-tag">
+      <span>👤 ${id}</span>
+      <button onclick="removeWhitelist('${id}')" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+async function addWhitelist() {
+  const input = document.getElementById('wl-input');
+  const userId = input.value.trim();
+  if (!userId || !/^\d{17,19}$/.test(userId)) { toast('ID de Discord inválido. Debe tener 17-19 dígitos.', 'error'); return; }
+  if (whitelist.includes(userId)) { toast('Este usuario ya está en la whitelist.', 'error'); return; }
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/whitelist`, {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId})
+    });
+    const data = await res.json();
+    if (res.ok) { whitelist = data.whitelist; renderWhitelist(); input.value=''; toast('Usuario añadido a la whitelist ✅'); }
+    else toast(data.error || 'Error al añadir', 'error');
+  } catch { toast('Error de conexión', 'error'); }
+}
+
+async function removeWhitelist(userId) {
+  try {
+    const res = await fetch(`/api/server/${currentServerId}/whitelist/${userId}`, {
+      method:'DELETE', credentials:'include'
+    });
+    const data = await res.json();
+    if (res.ok) { whitelist = data.whitelist; renderWhitelist(); toast('Usuario removido de la whitelist'); }
+    else toast(data.error || 'Error al remover', 'error');
+  } catch { toast('Error de conexión', 'error'); }
+}
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('wl-input')?.addEventListener('keydown', e => { if(e.key==='Enter') addWhitelist(); });
+loadUser();
+</script>
+</body>
+</html>

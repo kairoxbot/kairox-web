@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Cuenta — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020817; --surface: #040f1e; --card: rgba(8,22,45,0.85);
+      --accent: #0ea5e9; --accent2: #00d4ff; --glow: rgba(0,212,255,.15);
+      --text1: #f0f9ff; --text2: #94a3b8; --border: rgba(14,165,233,.2);
+      --danger: #ef4444; --success: #22c55e;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { min-height:100vh; background:var(--bg); font-family:'Exo 2',sans-serif; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    canvas#bg { position:fixed; inset:0; z-index:0; }
+    .page { position:relative; z-index:10; width:100%; max-width:460px; padding:24px; }
+
+    .back-link { display:inline-flex; align-items:center; gap:8px; color:var(--text2); font-size:13px; text-decoration:none; margin-bottom:28px; transition:color .2s; letter-spacing:.5px; }
+    .back-link:hover { color:var(--accent2); }
+
+    .card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; padding:44px 40px;
+      backdrop-filter:blur(30px) saturate(150%);
+      box-shadow:0 0 80px rgba(0,0,0,.6), 0 0 40px var(--glow);
+      position:relative; overflow:hidden;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--accent),transparent);
+    }
+
+    /* States */
+    .state { display:none; text-align:center; }
+    .state.active { display:block; }
+
+    /* Icon */
+    .state-icon { font-size:56px; display:block; margin-bottom:20px; animation:pulse 3s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{filter:drop-shadow(0 0 10px var(--accent2))} 50%{filter:drop-shadow(0 0 28px var(--accent2)) drop-shadow(0 0 50px var(--accent))} }
+    .state-icon.spin { animation:spin 1.2s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    h1 { font-family:'Orbitron',monospace; font-size:20px; font-weight:900; color:var(--text1); letter-spacing:2px; margin-bottom:10px; }
+    h1 span { color:var(--accent2); }
+    .subtitle { color:var(--text2); font-size:14px; line-height:1.6; margin-bottom:28px; }
+    .email-highlight { color:var(--accent2); font-weight:600; }
+
+    /* Steps */
+    .steps { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; text-align:left; }
+    .step { display:flex; align-items:center; gap:14px; background:rgba(14,165,233,0.05); border:1px solid rgba(14,165,233,0.12); border-radius:10px; padding:12px 16px; }
+    .step-num { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+    .step-text { color:var(--text2); font-size:13px; line-height:1.4; }
+    .step-text strong { color:var(--text1); }
+
+    /* Buttons */
+    .btn-primary {
+      width:100%; padding:14px; background:linear-gradient(135deg,#0284c7,#0ea5e9,#00c4f0);
+      color:#fff; border:none; border-radius:10px;
+      font-family:'Orbitron',monospace; font-size:12px; font-weight:700; letter-spacing:2px;
+      cursor:pointer; box-shadow:0 0 30px rgba(14,165,233,.35);
+      transition:all .25s; position:relative; overflow:hidden;
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 0 50px rgba(14,165,233,.5); }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .btn-secondary {
+      width:100%; padding:12px; background:transparent; color:var(--text2);
+      border:1px solid var(--border); border-radius:10px;
+      font-family:'Exo 2',sans-serif; font-size:13px; font-weight:600;
+      cursor:pointer; transition:all .25s; margin-top:10px;
+    }
+    .btn-secondary:hover { color:var(--accent2); border-color:var(--accent2); background:var(--glow); }
+    .btn-secondary:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* Alert */
+    .alert { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; display:flex; align-items:center; gap:10px; animation:slideIn .3s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .alert-error { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25); color:#fca5a5; }
+    .alert-success { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.25); color:#86efac; }
+
+    /* Countdown */
+    .countdown { color:var(--text2); font-size:12px; margin-top:10px; min-height:18px; }
+    .countdown span { color:var(--accent); font-weight:600; }
+
+    /* Input */
+    .input-wrap { margin-bottom:16px; text-align:left; }
+    label { display:block; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:8px; }
+    input[type=email] {
+      width:100%; background:rgba(4,15,30,0.8); border:1px solid var(--border);
+      border-radius:10px; padding:13px 16px; color:var(--text1);
+      font-family:'Exo 2',sans-serif; font-size:15px; outline:none; transition:all .25s;
+    }
+    input[type=email]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,.12); }
+    input[type=email]::placeholder { color:#334155; }
+
+    /* Divider */
+    .divider { height:1px; background:var(--border); margin:20px 0; }
+
+    .login-link { text-align:center; color:var(--text2); font-size:13px; margin-top:20px; }
+    .login-link a { color:var(--accent2); text-decoration:none; font-weight:600; }
+    .login-link a:hover { color:#fff; }
+
+    /* Success icon animation */
+    @keyframes successPop { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+    .icon-success { animation:successPop .5s cubic-bezier(.34,1.56,.64,1) forwards; }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="page">
+  <a href="/" class="back-link">← Volver al inicio</a>
+  <div class="card">
+    <div id="alert-container"></div>
+
+    <!-- State: Pending verification (default) -->
+    <div class="state active" id="state-pending">
+      <span class="state-icon">📧</span>
+      <h1>Verifica tu <span>Cuenta</span></h1>
+      <p class="subtitle">Te enviamos un correo de verificación a <span class="email-highlight" id="show-email">tu dirección</span>. Revisa tu bandeja de entrada y haz clic en el enlace.</p>
+
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Revisa tu correo</strong> — Busca un email de KairoxBot</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Haz clic en el enlace</strong> — "Verificar cuenta"</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Inicia sesión</strong> — Accede a tu dashboard</div></div>
+      </div>
+
+      <button class="btn-secondary" id="btn-resend" onclick="showResendForm()">
+        ¿No recibiste el correo? Reenviar
+      </button>
+      <div class="countdown" id="countdown-msg"></div>
+    </div>
+
+    <!-- State: Resend form -->
+    <div class="state" id="state-resend">
+      <span class="state-icon">🔄</span>
+      <h1>Reenviar <span>Verificación</span></h1>
+      <p class="subtitle" style="margin-bottom:20px">Ingresa tu correo y te enviaremos un nuevo enlace de verificación.</p>
+      <div class="input-wrap">
+        <label>Correo electrónico</label>
+        <input type="email" id="resend-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <button class="btn-primary" id="btn-send" onclick="resendVerification()">ENVIAR ENLACE</button>
+      <button class="btn-secondary" onclick="showState('pending')">← Volver</button>
+    </div>
+
+    <!-- State: Verifying (loading) -->
+    <div class="state" id="state-verifying">
+      <span class="state-icon spin">⚙️</span>
+      <h1>Verificando <span>Cuenta</span></h1>
+      <p class="subtitle">Estamos procesando tu verificación, espera un momento...</p>
+    </div>
+
+    <!-- State: Success -->
+    <div class="state" id="state-success">
+      <span class="state-icon icon-success">✅</span>
+      <h1>¡Cuenta <span>Verificada</span>!</h1>
+      <p class="subtitle">Tu cuenta ha sido verificada exitosamente. Ya puedes acceder a tu dashboard de seguridad.</p>
+      <button class="btn-primary" onclick="window.location.href='/login'">IR AL LOGIN</button>
+    </div>
+
+    <!-- State: Error -->
+    <div class="state" id="state-error">
+      <span class="state-icon">❌</span>
+      <h1>Enlace <span>Inválido</span></h1>
+      <p class="subtitle">El enlace de verificación es inválido o ha expirado. Los enlaces son válidos por 24 horas.</p>
+      <button class="btn-primary" onclick="showState('resend')">SOLICITAR NUEVO ENLACE</button>
+      <button class="btn-secondary" onclick="window.location.href='/login'">Ir al Login</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="login-link">¿Ya verificaste? <a href="/login">Iniciar sesión</a></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Three.js background (igual que login.html)
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0x020817, 1);
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, .1, 1000);
+cam.position.z = 50;
+const count = 800;
+const pos = new Float32Array(count*3), col = new Float32Array(count*3);
+for(let i=0;i<count;i++){const i3=i*3;pos[i3]=(Math.random()-.5)*200;pos[i3+1]=(Math.random()-.5)*150;pos[i3+2]=(Math.random()-.5)*100;col[i3]=.02;col[i3+1]=.3+Math.random()*.3;col[i3+2]=.7+Math.random()*.3;}
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+const pts = new THREE.Points(geo,new THREE.PointsMaterial({size:1,vertexColors:true,transparent:true,opacity:.6}));
+scene.add(pts);
+(function loop(){requestAnimationFrame(loop);pts.rotation.y+=.0003;renderer.render(scene,cam);})();
+window.addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+
+// ── State management ──
+function showState(name) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById('state-' + name).classList.add('active');
+}
+function showResendForm() { showState('resend'); }
+
+function showAlert(msg, type='error') {
+  const el = document.getElementById('alert-container');
+  el.innerHTML = `<div class="alert alert-${type}"><span>${type==='error'?'⚠️':'✅'}</span>${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 5000);
+}
+
+// ── Check URL on load ──
+const params = new URLSearchParams(location.search);
+
+// If came from register, show email
+const regEmail = sessionStorage.getItem('reg_email');
+if (regEmail) document.getElementById('show-email').textContent = regEmail;
+
+// If there's a verified param (redirect from /auth/verify/:token success)
+// The server redirects to /login?verified=1, so this page handles the intermediate loading state
+// Check if we're on /verify with a processing indicator
+if (params.get('processing')) {
+  showState('verifying');
+  setTimeout(() => showState('success'), 1500);
+}
+
+// ── Resend verification ──
+let resendCooldown = 0;
+async function resendVerification() {
+  if (resendCooldown > 0) return;
+  const email = document.getElementById('resend-email').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAlert('Ingresa un correo válido.');
+    return;
+  }
+  const btn = document.getElementById('btn-send');
+  btn.disabled = true; btn.textContent = 'ENVIANDO...';
+  try {
+    const res = await fetch('/auth/resend-verification', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await res.json();
+    showAlert(data.message || 'Enlace enviado.', 'success');
+    showState('pending');
+    document.getElementById('show-email').textContent = email;
+    // Cooldown 60s
+    resendCooldown = 60;
+    startCooldown();
+  } catch {
+    showAlert('Error de conexión. Inténtalo de nuevo.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ENVIAR ENLACE';
+  }
+}
+
+function startCooldown() {
+  const msg = document.getElementById('countdown-msg');
+  const btn = document.getElementById('btn-resend');
+  btn.disabled = true;
+  const iv = setInterval(() => {
+    resendCooldown--;
+    msg.innerHTML = `Podrás reenviar en <span>${resendCooldown}s</span>`;
+    if (resendCooldown <= 0) {
+      clearInterval(iv);
+      msg.innerHTML = '';
+      btn.disabled = false;
+    }
+  }, 1000);
+}
+</script>
+</body>
+</html>

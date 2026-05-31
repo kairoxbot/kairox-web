@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soporte — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#020817;--surface:#040f1e;--card:rgba(8,22,45,0.85);
+      --accent:#0ea5e9;--accent2:#00d4ff;--glow:rgba(0,212,255,.15);--glow-strong:rgba(0,212,255,.35);
+      --text1:#f0f9ff;--text2:#94a3b8;--text3:#64748b;--border:rgba(14,165,233,.2);
+      --success:#22c55e;--warning:#f59e0b;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text1);font-family:'Exo 2',sans-serif;min-height:100vh;}
+    #bg{position:fixed;inset:0;z-index:0;opacity:0.4;}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 60px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,8,23,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+    .nav-logo{display:flex;align-items:center;gap:10px;font-family:'Orbitron',monospace;font-size:17px;font-weight:900;letter-spacing:3px;color:var(--text1);text-decoration:none;}
+    .nav-logo .icon{filter:drop-shadow(0 0 8px var(--accent2));}
+    .nav-logo span{color:var(--accent2);}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 18px;transition:all .2s;}
+    .back-btn:hover{color:var(--accent2);border-color:var(--accent2);background:var(--glow);}
+
+    /* Page */
+    .page{position:relative;z-index:10;max-width:1000px;margin:0 auto;padding:120px 40px 80px;}
+
+    /* Header */
+    .doc-header{text-align:center;margin-bottom:64px;}
+    .doc-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent2);background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);border-radius:100px;padding:6px 18px;margin-bottom:20px;}
+    .doc-title{font-family:'Orbitron',monospace;font-size:clamp(28px,5vw,48px);font-weight:900;color:var(--text1);margin-bottom:16px;}
+    .doc-title span{color:var(--accent2);}
+    .doc-subtitle{color:var(--text2);font-size:16px;max-width:520px;margin:0 auto;line-height:1.7;}
+
+    .divider{height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:48px 0;}
+
+    /* Cards grid */
+    .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:48px;}
+    @media(max-width:700px){.cards-grid{grid-template-columns:1fr;}}
+
+    .support-card{
+      background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 28px;
+      text-decoration:none;display:flex;flex-direction:column;gap:16px;
+      transition:all .3s;position:relative;overflow:hidden;
+    }
+    .support-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--glow),transparent 70%);opacity:0;transition:opacity .3s;}
+    .support-card:hover{transform:translateY(-6px);border-color:var(--accent2);box-shadow:0 16px 50px rgba(0,0,0,0.4),0 0 30px var(--glow);}
+    .support-card:hover::before{opacity:1;}
+    .card-icon{font-size:36px;line-height:1;}
+    .card-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;width:fit-content;}
+    .label-live{background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.3);}
+    .label-docs{background:rgba(14,165,233,0.12);color:var(--accent2);border:1px solid rgba(14,165,233,0.25);}
+    .label-status{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);}
+    .label-email{background:rgba(168,85,247,0.12);color:#c084fc;border:1px solid rgba(168,85,247,0.3);}
+    .card-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--text1);letter-spacing:1px;}
+    .card-desc{color:var(--text2);font-size:14px;line-height:1.7;flex:1;}
+    .card-action{display:inline-flex;align-items:center;gap:8px;color:var(--accent2);font-size:13px;font-weight:600;margin-top:4px;transition:gap .2s;}
+    .support-card:hover .card-action{gap:14px;}
+
+    /* Status indicator */
+    .status-section{margin-bottom:48px;}
+    .status-header{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:20px;}
+    .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    @media(max-width:600px){.status-grid{grid-template-columns:1fr;}}
+    .status-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
+    .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .dot-green{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+    .status-label{font-size:14px;color:var(--text1);font-weight:500;}
+    .status-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+
+    /* FAQ */
+    .faq-section{margin-bottom:48px;}
+    .faq-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:20px;}
+    .faq-item{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+    .faq-question{padding:18px 24px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:500;color:var(--text1);transition:background .2s;user-select:none;}
+    .faq-question:hover{background:rgba(14,165,233,0.05);}
+    .faq-arrow{color:var(--accent2);font-size:18px;transition:transform .25s;flex-shrink:0;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);}
+    .faq-answer{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+    .faq-item.open .faq-answer{max-height:300px;}
+    .faq-answer-inner{padding:0 24px 18px;color:var(--text2);font-size:14px;line-height:1.7;}
+    .faq-answer-inner a{color:var(--accent2);}
+
+    /* Contact CTA */
+    .contact-box{background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(0,212,255,0.04));border:1px solid rgba(0,212,255,0.3);border-radius:20px;padding:48px;text-align:center;position:relative;overflow:hidden;}
+    .contact-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--accent),transparent);}
+    .contact-box h2{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:var(--text1);margin-bottom:12px;}
+    .contact-box p{color:var(--text2);font-size:15px;margin-bottom:28px;line-height:1.7;}
+    .contact-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+    .btn-discord{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:linear-gradient(135deg,#5865F2,#7289DA);color:#fff;border:none;border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:2px;text-decoration:none;transition:all .25s;box-shadow:0 0 30px rgba(88,101,242,.35);}
+    .btn-discord:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(88,101,242,.5);}
+    .btn-email{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:rgba(8,22,45,0.8);color:var(--text2);border:1px solid var(--border);border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:2px;text-decoration:none;transition:all .25s;}
+    .btn-email:hover{border-color:var(--accent2);color:var(--accent2);background:var(--glow);}
+
+    footer{position:relative;z-index:10;border-top:1px solid var(--border);padding:28px 60px;display:flex;justify-content:space-between;align-items:center;background:rgba(2,8,23,0.6);flex-wrap:wrap;gap:12px;}
+    footer p{color:var(--text2);font-size:13px;}
+    .footer-links{display:flex;gap:20px;}
+    .footer-links a{color:var(--text2);font-size:13px;text-decoration:none;transition:color .2s;}
+    .footer-links a:hover{color:var(--accent2);}
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo"><span class="icon">🛡️</span>KAIROX<span>BOT</span></a>
+  <a href="/" class="back-btn">← Volver al inicio</a>
+</nav>
+
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-tag">Soporte</div>
+    <h1 class="doc-title">Centro de <span>Ayuda</span></h1>
+    <p class="doc-subtitle">¿Necesitas ayuda con KairoxBot? Aquí encontrarás todo lo que necesitas para configurar y usar el bot correctamente.</p>
+  </div>
+
+  <!-- Quick access cards -->
+  <div class="cards-grid">
+    <a href="https://discord.gg/EykUGGhf" target="_blank" class="support-card">
+      <div class="card-icon">💬</div>
+      <div class="card-label label-live">Soporte en vivo</div>
+      <div class="card-title">Servidor Discord</div>
+      <div class="card-desc">Únete a nuestra comunidad en Discord. Respuesta rápida de nuestro equipo y la comunidad. El lugar más rápido para obtener ayuda.</div>
+      <span class="card-action">Unirse al servidor →</span>
+    </a>
+
+    <a href="/guides" class="support-card">
+      <div class="card-icon">📖</div>
+      <div class="card-label label-docs">Documentación</div>
+      <div class="card-title">Guías de uso</div>
+      <div class="card-desc">Aprende a configurar cada módulo del bot paso a paso: anti-nuke, whitelist, umbrales, canales de alerta y más.</div>
+      <span class="card-action">Ver guías →</span>
+    </a>
+
+    <a href="/status" class="support-card">
+      <div class="card-icon">📡</div>
+      <div class="card-label label-status">Monitoreo</div>
+      <div class="card-title">Estado del sistema</div>
+      <div class="card-desc">Revisa el estado en tiempo real del bot, el dashboard y la base de datos. Historial de incidentes y mantenimientos programados.</div>
+      <span class="card-action">Ver estado →</span>
+    </a>
+
+    <a href="mailto:frtjjj7@gmail.com" class="support-card">
+      <div class="card-icon">✉️</div>
+      <div class="card-label label-email">Contacto directo</div>
+      <div class="card-title">Email</div>
+      <div class="card-desc">Para consultas privadas, reportes de seguridad o temas legales. Tiempo de respuesta: 24-48 horas hábiles.</div>
+      <span class="card-action">Enviar email →</span>
+    </a>
+  </div>
+
+  <!-- System status -->
+  <div class="status-section">
+    <div class="status-header">Estado actual del sistema</div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="status-dot dot-green"></div>
+        <div>
+          <div class="status-label">Bot Discord</div>
+          <div class="status-sub">Operativo</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-dot dot-green"></div>
+        <div>
+          <div class="status-label">Dashboard Web</div>
+          <div class="status-sub">Operativo</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-dot dot-green"></div>
+        <div>
+          <div class="status-label">Base de Datos</div>
+          <div class="status-sub">Operativo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-title">Preguntas frecuentes</div>
+
+    <div class="faq-item">
+      <div class="faq-question">¿Cómo añado KairoxBot a mi servidor? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">Usa el enlace de invitación oficial: <a href="https://discord.com/oauth2/authorize?client_id=1510764046620688404&permissions=8&integration_type=0&scope=bot" target="_blank">invitar KairoxBot</a>. Necesitas tener el permiso "Gestionar Servidor" en el servidor donde lo quieres añadir. Tras añadirlo, regístrate en el dashboard y vincula tu servidor.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">El bot sancionó a un admin de confianza, ¿qué hago? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">Ve al dashboard → sección Whitelist y añade el ID de Discord del admin afectado. Los usuarios en la whitelist están exentos del sistema anti-nuke. También puedes ajustar los umbrales de detección para reducir falsos positivos.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">¿Qué permisos necesita el bot para funcionar? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">KairoxBot necesita permisos de Administrador para poder leer los registros de auditoría, expulsar/banear miembros como medida de protección, y enviar mensajes en canales de alerta. Sin estos permisos, muchas funciones de protección no podrán actuar a tiempo.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">¿Cómo configuro el canal de alertas? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">Desde el dashboard, ve a la configuración de tu servidor y busca "Canal de Alertas". Introduce el ID del canal de Discord donde quieres recibir notificaciones. Puedes obtener el ID de un canal activando el Modo Desarrollador en Discord (Ajustes → Avanzado) y haciendo clic derecho sobre el canal.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">¿El bot lee mis mensajes? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">No. KairoxBot no lee ni almacena el contenido de los mensajes de tu servidor. Solo monitorea eventos de moderación (bans, kicks, eliminación de canales y roles, creación de webhooks) para detectar actividad de nuke.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">¿Qué pasa si elimino el bot de mi servidor? <span class="faq-arrow">▾</span></div>
+      <div class="faq-answer"><div class="faq-answer-inner">La protección se desactiva inmediatamente. Tus datos de configuración y logs se mantienen en el dashboard por 30 días. Si vuelves a añadir el bot, tu configuración anterior seguirá disponible.</div></div>
+    </div>
+  </div>
+
+  <!-- Contact CTA -->
+  <div class="contact-box">
+    <h2>¿No encontraste lo que buscabas?</h2>
+    <p>Nuestro equipo está disponible para ayudarte. La forma más rápida es el servidor de Discord, donde respondemos en minutos.</p>
+    <div class="contact-buttons">
+      <a href="https://discord.gg/EykUGGhf" target="_blank" class="btn-discord">💬 Unirse al Discord</a>
+      <a href="mailto:frtjjj7@gmail.com" class="btn-email">✉️ Enviar email</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© KairoxBot Security · <a href="mailto:frtjjj7@gmail.com" style="color:var(--accent)">frtjjj7@gmail.com</a></p>
+  <div class="footer-links">
+    <a href="/terms">Términos</a>
+    <a href="/privacy">Privacidad</a>
+    <a href="/cookies">Cookies</a>
+    <a href="https://discord.gg/EykUGGhf" target="_blank">Discord</a>
+  </div>
+</footer>
+
+<script>
+// FAQ accordion
+document.querySelectorAll('.faq-question').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// Hex background
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');let W,H,hexes=[];const S=40;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;hexes=[];const w=S*2,h=Math.sqrt(3)*S,cols=Math.ceil(W/(w*.75))+4,rows=Math.ceil(H/h)+3;for(let r=-1;r<rows;r++)for(let c=-2;c<cols;c++)hexes.push({x:c*w*.75,y:r*h+(c%2===0?0:h/2),phase:Math.random()*Math.PI*2,speed:.3+Math.random()*.4});}
+function drawHex(x,y,s,a){ctx.beginPath();for(let i=0;i<6;i++){const ang=Math.PI/180*(60*i-30);ctx.lineTo(x+s*Math.cos(ang),y+s*Math.sin(ang));}ctx.closePath();ctx.strokeStyle=`rgba(14,165,233,${a})`;ctx.lineWidth=.7;ctx.stroke();}
+let t=0;function loop(){requestAnimationFrame(loop);t+=.01;ctx.fillStyle='#020817';ctx.fillRect(0,0,W,H);hexes.forEach(h=>{const p=.02+Math.abs(Math.sin(t*h.speed+h.phase))*.1;drawHex(h.x,h.y,S-1,p);if(Math.sin(t*h.speed*2+h.phase)>.97)drawHex(h.x,h.y,S-1,.4);});}
+resize();loop();window.addEventListener('resize',resize);
+</script>
+</body>
+</html>

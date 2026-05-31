@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro — KairoxBot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020817; --surface: #040f1e; --card: rgba(8,22,45,0.85);
+      --accent: #0ea5e9; --accent2: #00d4ff; --glow: rgba(0,212,255,.15);
+      --text1: #f0f9ff; --text2: #94a3b8; --border: rgba(14,165,233,.2);
+      --danger: #ef4444; --success: #22c55e;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { min-height:100vh; background:var(--bg); font-family:'Exo 2',sans-serif; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    canvas#bg { position:fixed; inset:0; z-index:0; }
+    .page { position:relative; z-index:10; width:100%; max-width:460px; padding:24px; }
+
+    .back-link { display:inline-flex; align-items:center; gap:8px; color:var(--text2); font-size:13px; text-decoration:none; margin-bottom:28px; transition:color .2s; letter-spacing:.5px; }
+    .back-link:hover { color:var(--accent2); }
+
+    .card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; padding:44px 40px;
+      backdrop-filter:blur(30px) saturate(150%);
+      box-shadow:0 0 80px rgba(0,0,0,.6), 0 0 40px var(--glow);
+      position:relative; overflow:hidden;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--accent),transparent);
+    }
+
+    .card-logo { text-align:center; margin-bottom:28px; }
+    .card-logo .icon { font-size:40px; display:block; margin-bottom:10px; filter:drop-shadow(0 0 16px var(--accent2)); animation:pulse 3s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{filter:drop-shadow(0 0 10px var(--accent2))} 50%{filter:drop-shadow(0 0 25px var(--accent2)) drop-shadow(0 0 50px var(--accent))} }
+    .card-logo h1 { font-family:'Orbitron',monospace; font-size:20px; font-weight:900; color:var(--text1); letter-spacing:3px; }
+    .card-logo h1 span { color:var(--accent2); }
+    .card-logo p { color:var(--text2); font-size:13px; margin-top:6px; letter-spacing:.5px; }
+
+    .form-group { margin-bottom:18px; }
+    label { display:block; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:7px; }
+    .input-wrap { position:relative; }
+    .input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:15px; pointer-events:none; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width:100%; background:rgba(4,15,30,0.8); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px 12px 42px;
+      color:var(--text1); font-family:'Exo 2',sans-serif; font-size:14px;
+      outline:none; transition:all .25s;
+    }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,.12), 0 0 20px rgba(14,165,233,.08); }
+    input::placeholder { color:#334155; }
+    input.error { border-color:var(--danger); box-shadow:0 0 0 3px rgba(239,68,68,.1); }
+    input.valid { border-color:var(--success); }
+    .input-toggle { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text2); cursor:pointer; font-size:15px; transition:color .2s; }
+    .input-toggle:hover { color:var(--accent2); }
+
+    /* Password strength */
+    .pw-strength { margin-top:8px; }
+    .pw-bars { display:flex; gap:4px; margin-bottom:4px; }
+    .pw-bar { height:3px; flex:1; border-radius:2px; background:rgba(255,255,255,0.07); transition:background .3s; }
+    .pw-bar.active-weak   { background:#ef4444; }
+    .pw-bar.active-medium { background:#f59e0b; }
+    .pw-bar.active-strong { background:#22c55e; }
+    .pw-label { font-size:11px; color:var(--text2); letter-spacing:.5px; }
+
+    /* Requirements checklist */
+    .pw-reqs { margin-top:10px; display:flex; flex-direction:column; gap:4px; }
+    .pw-req { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); transition:color .2s; }
+    .pw-req .dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.15); flex-shrink:0; transition:background .2s; }
+    .pw-req.met { color:#4ade80; }
+    .pw-req.met .dot { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+
+    /* Terms checkbox */
+    .terms-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; }
+    .terms-row input[type="checkbox"] { width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; padding:0; background:none; border:none; box-shadow:none; }
+    .terms-row input[type="checkbox"]:focus { box-shadow:none; }
+    .terms-row label { font-size:12px; color:var(--text2); line-height:1.5; letter-spacing:0; text-transform:none; cursor:pointer; margin-bottom:0; }
+    .terms-row a { color:var(--accent2); text-decoration:none; }
+    .terms-row a:hover { text-decoration:underline; }
+
+    .btn-submit {
+      width:100%; padding:14px; background:linear-gradient(135deg,#0284c7,#0ea5e9,#00c4f0);
+      color:#fff; border:none; border-radius:10px;
+      font-family:'Orbitron',monospace; font-size:13px; font-weight:700; letter-spacing:2px;
+      cursor:pointer;
+      box-shadow:0 0 30px rgba(14,165,233,.35);
+      transition:all .25s; position:relative; overflow:hidden;
+    }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 0 50px rgba(14,165,233,.5); }
+    .btn-submit:active { transform:translateY(0); }
+    .btn-submit:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .btn-submit .spinner { display:none; width:18px; height:18px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; margin:0 auto; }
+    .btn-submit.loading .btn-text { display:none; }
+    .btn-submit.loading .spinner { display:block; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .alert { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; display:flex; align-items:flex-start; gap:10px; animation:slideIn .3s ease; line-height:1.5; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .alert-error   { background:rgba(239,68,68,.1);  border:1px solid rgba(239,68,68,.25);  color:#fca5a5; }
+    .alert-success { background:rgba(34,197,94,.1);  border:1px solid rgba(34,197,94,.25);  color:#86efac; }
+    .alert-info    { background:rgba(14,165,233,.1); border:1px solid rgba(14,165,233,.25); color:#7dd3fc; }
+
+    .login-link { text-align:center; margin-top:22px; color:var(--text2); font-size:14px; }
+    .login-link a { color:var(--accent2); text-decoration:none; font-weight:600; transition:color .2s; }
+    .login-link a:hover { color:#fff; }
+
+    /* Success state */
+    .success-state { text-align:center; display:none; padding:12px 0; }
+    .success-state .big-icon { font-size:56px; margin-bottom:16px; animation:bounce .6s ease; }
+    @keyframes bounce { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    .success-state h2 { font-family:'Orbitron',monospace; font-size:18px; font-weight:700; color:var(--text1); margin-bottom:12px; letter-spacing:1px; }
+    .success-state p { color:var(--text2); font-size:14px; line-height:1.7; }
+    .success-state .email-highlight { color:var(--accent2); font-weight:600; }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="page">
+  <a href="/" class="back-link">← Volver al inicio</a>
+  <div class="card">
+    <div class="card-logo">
+      <span class="icon">🛡️</span>
+      <h1>KAIROX<span>BOT</span></h1>
+      <p>Crea tu cuenta gratuita y empieza a proteger</p>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <!-- Form -->
+    <form id="registerForm" autocomplete="off" novalidate>
+      <div class="form-group">
+        <label>Nombre de usuario</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="username" name="username" placeholder="tu_usuario" autocomplete="username" minlength="3" maxlength="32" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <div class="input-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" id="email" name="email" placeholder="tu@email.com" autocomplete="email" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" required>
+          <button type="button" class="input-toggle" id="togglePwd">👁️</button>
+        </div>
+        <div class="pw-strength" id="pwStrength" style="display:none">
+          <div class="pw-bars">
+            <div class="pw-bar" id="bar1"></div>
+            <div class="pw-bar" id="bar2"></div>
+            <div class="pw-bar" id="bar3"></div>
+            <div class="pw-bar" id="bar4"></div>
+          </div>
+          <span class="pw-label" id="pwLabel">Muy débil</span>
+          <div class="pw-reqs">
+            <div class="pw-req" id="req-len"><span class="dot"></span>Mínimo 8 caracteres</div>
+            <div class="pw-req" id="req-num"><span class="dot"></span>Al menos un número</div>
+            <div class="pw-req" id="req-upper"><span class="dot"></span>Al menos una mayúscula</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repite tu contraseña" autocomplete="new-password" required>
+          <button type="button" class="input-toggle" id="toggleConfirm">👁️</button>
+        </div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">
+          Acepto los <a href="/terms" target="_blank">Términos de Servicio</a> y la
+          <a href="/privacy" target="_blank">Política de Privacidad</a> de KairoxBot.
+        </label>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>
+        <span class="btn-text">CREAR CUENTA</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <!-- Success state (shown after register) -->
+    <div class="success-state" id="successState">
+      <div class="big-icon">📬</div>
+      <h2>¡Revisa tu correo!</h2>
+      <p>Te enviamos un enlace de verificación a<br><span class="email-highlight" id="sentEmail"></span><br><br>Haz clic en el enlace para activar tu cuenta. El enlace expira en <strong style="color:#f0f9ff">24 horas</strong>.</p>
+    </div>
+
+    <div class="login-link">
+      ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Hex background ─────────────────────────────────────────
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H, hexes = [];
+const S = 36;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  hexes = [];
+  const w = S * 2, h = Math.sqrt(3) * S;
+  const cols = Math.ceil(W / (w * .75)) + 4, rows = Math.ceil(H / h) + 3;
+  for (let r = -1; r < rows; r++)
+    for (let c = -2; c < cols; c++)
+      hexes.push({ x: c * w * .75, y: r * h + (c % 2 === 0 ? 0 : h / 2), phase: Math.random() * Math.PI * 2, speed: .3 + Math.random() * .4 });
+}
+function drawHex(x, y, s, a) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) { const ang = Math.PI / 180 * (60 * i - 30); ctx.lineTo(x + s * Math.cos(ang), y + s * Math.sin(ang)); }
+  ctx.closePath(); ctx.strokeStyle = `rgba(14,165,233,${a})`; ctx.lineWidth = .7; ctx.stroke();
+}
+let t = 0;
+function loop() {
+  requestAnimationFrame(loop); t += .01;
+  ctx.fillStyle = '#020817'; ctx.fillRect(0, 0, W, H);
+  hexes.forEach(h => {
+    const p = .02 + Math.abs(Math.sin(t * h.speed + h.phase)) * .1;
+    drawHex(h.x, h.y, S - 1, p);
+    if (Math.sin(t * h.speed * 2 + h.phase) > .97) drawHex(h.x, h.y, S - 1, .4);
+  });
+}
+resize(); loop();
+window.addEventListener('resize', resize);
+
+// ── Helpers ────────────────────────────────────────────────
+const alertEl = document.getElementById('alert-container');
+function showAlert(msg, type = 'error') {
+  const icons = { error: '⚠️', success: '✅', info: 'ℹ️' };
+  alertEl.innerHTML = `<div class="alert alert-${type}"><span>${icons[type]}</span><span>${msg}</span></div>`;
+}
+function clearAlert() { alertEl.innerHTML = ''; }
+
+// ── Password toggle ────────────────────────────────────────
+function toggleVisibility(inputId, btnId) {
+  document.getElementById(btnId).addEventListener('click', () => {
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+  });
+}
+toggleVisibility('password', 'togglePwd');
+toggleVisibility('confirmPassword', 'toggleConfirm');
+
+// ── Password strength ──────────────────────────────────────
+const pwInput = document.getElementById('password');
+const pwStrength = document.getElementById('pwStrength');
+const pwLabel = document.getElementById('pwLabel');
+const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+const reqLen = document.getElementById('req-len');
+const reqNum = document.getElementById('req-num');
+const reqUpper = document.getElementById('req-upper');
+
+function calcStrength(pw) {
+  let score = 0;
+  const hasLen = pw.length >= 8;
+  const hasNum = /\d/.test(pw);
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(pw);
+  if (hasLen) score++;
+  if (hasNum) score++;
+  if (hasUpper) score++;
+  if (hasSpecial) score++;
+  return { score, hasLen, hasNum, hasUpper };
+}
+
+pwInput.addEventListener('input', () => {
+  const pw = pwInput.value;
+  if (!pw) { pwStrength.style.display = 'none'; return; }
+  pwStrength.style.display = 'block';
+  const { score, hasLen, hasNum, hasUpper } = calcStrength(pw);
+
+  // Update bars
+  const levels = ['active-weak', 'active-medium', 'active-medium', 'active-strong'];
+  const labels = ['Muy débil', 'Débil', 'Buena', 'Fuerte'];
+  bars.forEach((b, i) => {
+    b.className = 'pw-bar';
+    if (i < score) b.classList.add(levels[score - 1]);
+  });
+  pwLabel.textContent = labels[score - 1] || 'Muy débil';
+
+  // Update reqs
+  reqLen.classList.toggle('met', hasLen);
+  reqNum.classList.toggle('met', hasNum);
+  reqUpper.classList.toggle('met', hasUpper);
+
+  validateForm();
+});
+
+// ── Confirm password ───────────────────────────────────────
+const confirmInput = document.getElementById('confirmPassword');
+confirmInput.addEventListener('input', () => {
+  if (confirmInput.value && confirmInput.value !== pwInput.value) {
+    confirmInput.classList.add('error');
+    confirmInput.classList.remove('valid');
+  } else if (confirmInput.value === pwInput.value && confirmInput.value) {
+    confirmInput.classList.remove('error');
+    confirmInput.classList.add('valid');
+  }
+  validateForm();
+});
+
+// ── Enable/disable submit ──────────────────────────────────
+const usernameInput = document.getElementById('username');
+const emailInput = document.getElementById('email');
+const termsCheck = document.getElementById('terms');
+const submitBtn = document.getElementById('submitBtn');
+
+function validateForm() {
+  const { score } = calcStrength(pwInput.value);
+  const ok =
+    usernameInput.value.trim().length >= 3 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value) &&
+    score >= 2 &&
+    pwInput.value === confirmInput.value &&
+    confirmInput.value.length > 0 &&
+    termsCheck.checked;
+  submitBtn.disabled = !ok;
+}
+
+[usernameInput, emailInput, termsCheck].forEach(el => {
+  el.addEventListener('input', validateForm);
+  el.addEventListener('change', validateForm);
+});
+
+// Clear error styling on input
+[usernameInput, emailInput, pwInput, confirmInput].forEach(el => {
+  el.addEventListener('input', () => el.classList.remove('error'));
+});
+
+// ── Submit ─────────────────────────────────────────────────
+document.getElementById('registerForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  clearAlert();
+
+  const username = usernameInput.value.trim();
+  const email = emailInput.value.trim();
+  const password = pwInput.value;
+  const confirm = confirmInput.value;
+
+  // Client-side validations
+  if (username.length < 3 || username.length > 32) {
+    showAlert('El nombre de usuario debe tener entre 3 y 32 caracteres.');
+    usernameInput.classList.add('error'); return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAlert('Ingresa un correo electrónico válido.');
+    emailInput.classList.add('error'); return;
+  }
+  if (password.length < 8) {
+    showAlert('La contraseña debe tener al menos 8 caracteres.');
+    pwInput.classList.add('error'); return;
+  }
+  if (password !== confirm) {
+    showAlert('Las contraseñas no coinciden.');
+    confirmInput.classList.add('error'); return;
+  }
+
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert(data.error || 'Error al crear la cuenta.');
+      if (data.error?.includes('usuario')) usernameInput.classList.add('error');
+      if (data.error?.includes('correo')) emailInput.classList.add('error');
+    } else {
+      // Show success state
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('sentEmail').textContent = email;
+      document.getElementById('successState').style.display = 'block';
+      clearAlert();
+    }
+  } catch {
+    showAlert('Error de conexión. Inténtalo de nuevo.');
+  } finally {
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
