@@ -1,14 +1,6 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ── Base email template ────────────────────────────────────
 const baseTemplate = (content) => `
@@ -123,12 +115,14 @@ const sendVerificationEmail = async (email, username, token) => {
     <p class="text" style="font-size:12px; color: #475569;">⏰ Este enlace expira en <strong style="color:#f0f9ff">24 horas</strong>.</p>
   `;
 
-  await transporter.sendMail({
-    from: `"SentinelBot 🛡️" <${process.env.GMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: 'SentinelBot <onboarding@resend.dev>',
     to: email,
     subject: '✅ Verifica tu cuenta de SentinelBot',
     html: baseTemplate(content),
   });
+
+  if (error) throw new Error(error.message);
   console.log('✅ Email de verificación enviado a:', email);
 };
 
@@ -159,12 +153,14 @@ const sendWelcomeEmail = async (email, username) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `"SentinelBot 🛡️" <${process.env.GMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: 'SentinelBot <onboarding@resend.dev>',
     to: email,
     subject: '🎉 ¡Bienvenido a SentinelBot! Tu cuenta está lista',
     html: baseTemplate(content),
   });
+
+  if (error) throw new Error(error.message);
   console.log('✅ Email de bienvenida enviado a:', email);
 };
 
@@ -182,12 +178,14 @@ const sendSecurityAlert = async (email, serverName, eventType, details) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `"SentinelBot Alertas 🚨" <${process.env.GMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: 'SentinelBot <onboarding@resend.dev>',
     to: email,
     subject: `🚨 ALERTA: Actividad sospechosa en ${serverName}`,
     html: baseTemplate(content),
   });
+
+  if (error) throw new Error(error.message);
   console.log('✅ Email de alerta enviado a:', email);
 };
 
