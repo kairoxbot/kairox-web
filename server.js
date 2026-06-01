@@ -9,6 +9,9 @@ const path = require('path');
 
 const app = express();
 
+// ── Trust proxy (Railway / reverse proxy) ─────────────────
+app.set('trust proxy', 1);
+
 // ── Security ──────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
