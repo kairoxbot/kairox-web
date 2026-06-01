@@ -129,6 +129,7 @@ const sendVerificationEmail = async (email, username, token) => {
     subject: '✅ Verifica tu cuenta de SentinelBot',
     html: baseTemplate(content),
   });
+  console.log('✅ Email de verificación enviado a:', email);
 };
 
 // ── Send welcome email (after verification) ────────────────
@@ -164,6 +165,7 @@ const sendWelcomeEmail = async (email, username) => {
     subject: '🎉 ¡Bienvenido a SentinelBot! Tu cuenta está lista',
     html: baseTemplate(content),
   });
+  console.log('✅ Email de bienvenida enviado a:', email);
 };
 
 // ── Send security alert email ──────────────────────────────
@@ -186,6 +188,7 @@ const sendSecurityAlert = async (email, serverName, eventType, details) => {
     subject: `🚨 ALERTA: Actividad sospechosa en ${serverName}`,
     html: baseTemplate(content),
   });
+  console.log('✅ Email de alerta enviado a:', email);
 };
 
 module.exports = { sendVerificationEmail, sendWelcomeEmail, sendSecurityAlert };
