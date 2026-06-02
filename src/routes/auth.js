@@ -2,7 +2,6 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
-const { sendVerificationEmail, sendWelcomeEmail } = require('../services/email');
 
 const cookieOpts = {
   httpOnly: true,
@@ -39,94 +38,22 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Este nombre de usuario ya existe.' });
     }
 
-    // Create user
-    const verificationToken = uuidv4();
+    // Create user — verified automatically
     const user = new User({
       username: username.trim(),
       email: email.toLowerCase().trim(),
       password,
-      verificationToken,
-      verificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      isVerified: true,
     });
     await user.save();
 
-    // Send verification email
-    try {
-      await sendVerificationEmail(user.email, user.username, verificationToken);
-    } catch (mailErr) {
-      console.error('Error enviando email:', mailErr.message);
-    }
-
     res.status(201).json({
-      message: '✅ Cuenta creada. Revisa tu correo para verificar tu cuenta.',
+      message: '✅ Cuenta creada exitosamente. Ya puedes iniciar sesión.',
       email: user.email,
     });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Error al crear la cuenta. Inténtalo de nuevo.' });
-  }
-});
-
-// ── GET /auth/verify/:token ────────────────────────────────
-router.get('/verify/:token', async (req, res) => {
-  try {
-    const user = await User.findOne({
-      verificationToken: req.params.token,
-      verificationExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.redirect('/login?error=invalid_token');
-    }
-
-    if (user.isVerified) {
-      return res.redirect('/login?message=already_verified');
-    }
-
-    user.isVerified = true;
-    user.verificationToken = null;
-    user.verificationExpires = null;
-    await user.save();
-
-    // Send welcome email
-    try {
-      await sendWelcomeEmail(user.email, user.username);
-    } catch (mailErr) {
-      console.error('Error enviando welcome email:', mailErr.message);
-    }
-
-    res.redirect('/login?verified=1');
-  } catch (err) {
-    console.error('Verify error:', err);
-    res.redirect('/login?error=server_error');
-  }
-});
-
-// ── POST /auth/resend-verification ────────────────────────
-router.post('/resend-verification', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email: email.toLowerCase() });
-
-    if (!user) {
-      // Don't reveal if user exists
-      return res.json({ message: 'Si el correo existe, recibirás un nuevo enlace.' });
-    }
-    if (user.isVerified) {
-      return res.json({ message: 'Tu cuenta ya estaba verificada.' });
-    }
-
-    const verificationToken = uuidv4();
-    user.verificationToken = verificationToken;
-    user.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await user.save();
-
-    await sendVerificationEmail(user.email, user.username, verificationToken);
-
-    res.json({ message: 'Nuevo enlace de verificación enviado.' });
-  } catch (err) {
-    console.error('Resend error:', err);
-    res.status(500).json({ error: 'Error al reenviar verificación.' });
   }
 });
 
